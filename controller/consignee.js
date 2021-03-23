@@ -13,7 +13,6 @@ class Consignee {
     static async Login(req,res){
         try {
             const body = req.body;
-            console.log(body)
             consignee_login.findOne({Email:body.Email},(err,consignee)=>{
                 if(err){
                     console.log(err);
