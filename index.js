@@ -9,7 +9,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+app.get('/',(req,res)=>{
+  res.send("OK");
+})
 app.use("/", routes);
+
 app.listen(PORT, (err) => {
   if (err) {
     console.log(err);
