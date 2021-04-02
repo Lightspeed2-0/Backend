@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { consignee_login } = require("../model/index");
-const {JWTsign} = require('../packages/auth/tokenize')
+const { JWTsign } = require("../packages/auth/tokenize");
 mongoose.connect(
   "mongodb+srv://jayasurya:123@development.cdhc7.mongodb.net/test",
   { useUnifiedTopology: true, useNewUrlParser: true }
@@ -27,7 +27,7 @@ class Consignee {
           res.status(401).send("Invalid Password");
         } else {
           const token = JWTsign(consignee._id);
-          res.send({ token });
+          res.send({ token, Email: consignee.Email });
         }
       });
     } catch (error) {
