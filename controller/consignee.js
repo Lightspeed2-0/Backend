@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const { consignee_login } = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
+const transporter = require("../packages/auth/mailer");
+
 mongoose.connect(
-  "mongodb+srv://jayasurya:123@development.cdhc7.mongodb.net/test",
+  "mongodb+srv://jayasurya:123@development.cdhc7.mongodb.net/staging",
   { useUnifiedTopology: true, useNewUrlParser: true }
 );
 const db = mongoose.connection;
@@ -21,7 +23,7 @@ class Consignee {
           console.log(err);
         }
         console.log(consignee);
-        if (!consignee) {
+        if (!consignee||consignee.IsVerified==false) {
           res.status(401).send("Invalid Email Id");
         } else if (body.Password !== consignee.Password) {
           res.status(401).send("Invalid Password");
@@ -36,18 +38,87 @@ class Consignee {
   }
   static async Register(req, res) {
     try {
-      const consignee = new consignee_login(req.body);
-      consignee.save((error, consignee) => {
-        if (error) {
-          return res.status(500).send("Invalid");
-        } else {
-          const token = JWTsign(consignee._id);
-          res.send({ token });
+      var user;
+      await consignee_login.find({Email:req.body.Email},(err,consignee)=>{
+        // console.log(consignee[0])
+          user = consignee[0];
+      })
+
+      if(user)
+      {   
+        if(user.IsVerified===true)
+        {
+          res.status(400).send("Email already exist");
+          return;
+        }else{
+          await consignee_login.deleteMany({Email:req.body.Email});
         }
-      });
+      }
+      var OTP = Math.floor(Math.random()*(800000)+100000);
+      const mailOptions = {
+        from: 'lightningspeed.2021@gmail.com', // sender address
+        to: req.body.Email, // list of receivers
+        subject: 'LightSpeed OTP verification', // Subject line
+        html: `<p>Thank you for registering in our Lightspeed</p><p>OTP is:</p><h1>${OTP}</h1><br><br><p>Thanks & Regards</p><p>Lightspeed Team</p>`// plain text body
+      };
+      transporter.sendMail(mailOptions, function (err, info) {
+        if(err)
+          res.status(400).send("OTP not send")
+        else{
+          var data = {...req.body,
+            OTP:OTP,
+            IsVerified:false,
+            Rating:0,
+            Role:0}
+          const consignee = new consignee_login(data);
+          consignee.save((error, consignee) => {
+            if (error) {
+              return res.status(500).send("Invalid");
+            } else {
+              res.send("OTP send");
+            }
+          });
+        }
+    });
     } catch (error) {
       console.log(error);
     }
   }
+
+  static async Verify(req,res){
+    try{
+      var user;
+      await consignee_login.find({Email:req.body.Email},(err,consignee)=>{
+        if(err)console.log(err);
+        else{
+          user = consignee[0];
+        }
+      })
+      // console.log(user)
+      // console.log(user.OTP,req.body.OTP)
+      if(user.OTP===req.body.OTP)
+      {
+          await consignee_login.updateMany({Email:req.body.Email},{IsVerified:true});
+          res.send("verified");
+      }
+      else{
+        var OTP = Math.floor(Math.random()*(800000)+100000);
+        await consignee_login.updateMany({Email:req.body.Email},{OTP:OTP});
+        const mailOptions = {
+          from: 'lightningspeed.2021@gmail.com', // sender address
+          to: req.body.Email, // list of receivers
+          subject: 'LightSpeed OTP verification', // Subject line
+          html: `<p>Thank you for registering in our Lightspeed</p><p>OTP is:</p><h1>${OTP}</h1><br><br><p>Thanks & Regards</p><p>Lightspeed Team</p>`// plain text body
+        };
+        transporter.sendMail(mailOptions, function (err, info) {
+          if(err)console.log(err)
+          else
+          res.status(400).send("New OTP send");
+        })
+      }
+    }catch(err){
+      console.log(err);
+    }
+  }
 }
-module.exports = Consignee;
+  module.exports = Consignee;
