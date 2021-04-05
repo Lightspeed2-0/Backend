@@ -24,9 +24,9 @@ class Consignee {
         }
         console.log(consignee);
         if (!consignee||consignee.IsVerified==false) {
-          res.status(401).send("Invalid Email Id");
+          res.status(401).send({msg:"Invalid Email Id"});
         } else if (body.Password !== consignee.Password) {
-          res.status(401).send("Invalid Password");
+          res.status(401).send({msg:"Invalid Password"});
         } else {
           const token = JWTsign(consignee._id);
           res.send({ token, Email: consignee.Email });
@@ -39,6 +39,7 @@ class Consignee {
   static async Register(req, res) {
     try {
       var user;
+      // console.log("here")
       await consignee_login.find({Email:req.body.Email},(err,consignee)=>{
         // console.log(consignee[0])
           user = consignee[0];
@@ -48,7 +49,7 @@ class Consignee {
       {   
         if(user.IsVerified===true)
         {
-          res.status(400).send("Email already exist");
+          res.status(400).send({msg:"Email already exist"});
           return;
         }else{
           await consignee_login.deleteMany({Email:req.body.Email});
@@ -62,8 +63,9 @@ class Consignee {
         html: `<p>Thank you for registering in our Lightspeed</p><p>OTP is:</p><h1>${OTP}</h1><br><br><p>Thanks & Regards</p><p>Lightspeed Team</p>`// plain text body
       };
       transporter.sendMail(mailOptions, function (err, info) {
+        console.log(info)
         if(err)
-          res.status(400).send("OTP not send")
+          res.status(400).send({msg:"OTP not send"})
         else{
           var data = {...req.body,
             OTP:OTP,
@@ -73,9 +75,10 @@ class Consignee {
           const consignee = new consignee_login(data);
           consignee.save((error, consignee) => {
             if (error) {
-              return res.status(500).send("Invalid");
+              return res.status(500).send({msg:"Invalid"});
             } else {
-              res.send("OTP send");
+              // console.log("gere")
+              res.send({msg:"OTP send",Email:consignee.Email});
             }
           });
         }
@@ -99,7 +102,11 @@ class Consignee {
       if(user.OTP===req.body.OTP)
       {
           await consignee_login.updateMany({Email:req.body.Email},{IsVerified:true});
-          res.send("verified");
+          await consignee_login.find({Email:req.body.Email},(err,user)=>{
+            // console.log(user)
+            const token = JWTsign(user[0]._id);
+              res.send({msg:"verified",token});
+          }); 
       }
       else{
         var OTP = Math.floor(Math.random()*(800000)+100000);
