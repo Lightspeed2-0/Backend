@@ -1,18 +1,6 @@
-const mongoose = require("mongoose");
 const { consignee_login } = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const transporter = require("../packages/auth/mailer");
-
-mongoose.connect(
-  "mongodb+srv://jayasurya:123@development.cdhc7.mongodb.net/staging",
-  { useUnifiedTopology: true, useNewUrlParser: true }
-);
-const db = mongoose.connection;
-
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function () {
-  console.log("mongodb connected!");
-});
 
 class Consignee {
   static async Login(req, res) {

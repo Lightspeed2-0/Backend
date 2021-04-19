@@ -1,3 +1,7 @@
 const Consignee = require('./consignee');
+const Transporter = require('./transporter');
 
-module.exports ={Consignee};
+module.exports ={
+    Consignee,
+    Transporter
+};
