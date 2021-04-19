@@ -2,7 +2,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require('path');
 const session = require("express-session");
+
 const routes = require("./routes/index");
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use(express.static("./public"));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(
   session({
     secret: "why_so_serious",
