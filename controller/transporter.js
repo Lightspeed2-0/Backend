@@ -120,9 +120,9 @@ class Transporter{
                     if (error) {
                     return res.status(500).send({msg:"Invalid"});
                     } else {       
-                    newPanPath = 'uploads/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename);
+                    newPanPath = 'public/uploads/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename);
                     fs.renameSync(req.files['PanCard'][0].path,newPanPath)
-                    newTinPath = 'uploads/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename);
+                    newTinPath = 'public/uploads/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename);
                     fs.renameSync(req.files['TinCard'][0].path,newTinPath)
                     await transporterModel.updateOne({_id:user._id},{$set:{PanCard: newPanPath, TinCard : newTinPath }},{multi:true})
                     res.send({msg:"OTP send",Email:user.Email});
