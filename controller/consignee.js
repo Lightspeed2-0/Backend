@@ -72,7 +72,7 @@ class Consignee {
 				Role:0
 			}
 			const consignee = new consignee_login(data);
-			consignee.save((error, consignee) => {
+			consignee.save(async (error, consignee) => {
 				if (error) {
 					return res.status(500).send({msg:"Invalid"});
 				} else {
