@@ -8,6 +8,9 @@ const consigneeLoginSchema =new Schema({
     Rating: Number,
     Password: String,
     IsVerified: Boolean,
+    PanVerified: Boolean,
+    PanCardNo: String,
+    PanCard: String,
     OTP: Number,
     Role:Number
     });

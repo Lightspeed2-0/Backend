@@ -9,6 +9,7 @@ const TransporterSchema =new Schema({
   	TinCard: String,
     Rating: Number,
     Password: String,
+    PanCardNo: String,
     PanVerified: Boolean,
     TinVerified: Boolean,
     IsVerified: Boolean,
