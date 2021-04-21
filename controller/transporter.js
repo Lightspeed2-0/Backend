@@ -6,19 +6,19 @@ const fs = require('fs')
 const path = require('path');
 const { fstat } = require("fs");
 
-const OtpSender = async(Email,msg)=>{
+const OtpSender = async(res,Email,msg)=>{
     var OTP = Math.floor(Math.random()*(800000)+100000);
-    await transporterModel.updateMany({Email:req.body.Email},{OTP:OTP});
+    await transporterModel.updateMany({Email:Email},{OTP:OTP});
     const mailOptions = {
         from: 'lightningspeed.2021@gmail.com', // sender address
-        to: req.body.Email, // list of receivers
+        to: Email, // list of receivers
         subject: 'LightSpeed OTP verification', // Subject line
         html: `<p>Thank you for registering in our Lightspeed</p><p>OTP is:</p><h1>${OTP}</h1><br><br><p>Thanks & Regards</p><p>Lightspeed Team</p>`// plain text body
     };
-    transporter.sendMail(mailOptions, function (err, info) {
+    mailTransporter.sendMail(mailOptions, function (err, info) {
         if(err)console.log(err)
         else{
-            res.status(401).send(msg);
+            res.status(401).send({msg});
         }
         
     })
@@ -26,6 +26,7 @@ const OtpSender = async(Email,msg)=>{
 class Transporter{
     static async Login(req, res) {
         try {
+			console.log(req.body)
 			const body = req.body;
 			transporterModel.findOne({ Email: body.Email }, (err, transporter) => {
 				if (err) {
@@ -36,7 +37,7 @@ class Transporter{
 				}
 				else if(transporter.IsVerified==false)
 				{
-					OtpSender(transporter.Email,"nootp");
+					OtpSender(res,transporter.Email,"nootp");
 				}
 				else if(transporter.PanVerified==false||transporter.TinVerified==false)
 				{
@@ -108,10 +109,10 @@ class Transporter{
 							return res.status(500).send({msg:"Invalid"});
 						}
 						else {       
-							newPanPath = 'public/uploads/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename);
-							fs.renameSync(req.files['PanCard'][0].path,newPanPath)
-							newTinPath = 'public/uploads/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename);
-							fs.renameSync(req.files['TinCard'][0].path,newTinPath)
+							newPanPath = path.join(process.cwd(),'/public/uploads/transporter/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename));
+							fs.renameSync(path.join(process.cwd(),req.files['PanCard'][0].path),newPanPath)
+							newTinPath = path.join(process.cwd(),'/public/uploads/transporter/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename));
+							fs.renameSync(path.join(process.cwd(),req.files['TinCard'][0].path),newTinPath)
 							await transporterModel.updateOne({_id:user._id},{$set:{PanCard: newPanPath, TinCard : newTinPath }},{multi:true})
 							res.send({msg:"OTP send",Email:user.Email});
 						}
@@ -126,27 +127,26 @@ class Transporter{
 	static async Verify(req,res){
 		try{
 			var user;
-			await transporterModel.find({Email:req.body.Email},(err,transporter)=>{
+			await transporterModel.find({Email:req.body.Email},async (err,transporter)=>{
 				if(err)console.log(err);
 				else{
-					if(transporter)
+					if(transporter.length>0)
 					{
 						res.status(404).send("Email Not Found");
 						return;
 					}
-					user = transporter[0];
+					else if(transporter[0].OTP===req.body.OTP)
+					{
+						await transporterModel.updateMany({Email:req.body.Email},{IsVerified:true});
+						await transporterModel.find({Email:req.body.Email},(err,user)=>{
+							res.send({msg:"nopan"});
+						}); 
+					}
+					else{
+						OtpSender(res,req.Email,"Wrong OTP.New OTP send");
+					}
 				}
 			})
-			if(user.OTP===req.body.OTP)
-			{
-				await transporterModel.updateMany({Email:req.body.Email},{IsVerified:true});
-				await transporterModel.find({Email:req.body.Email},(err,user)=>{
-					res.send({msg:"nopan"});
-				}); 
-			}
-			else{
-				OtpSender(req.Email,"Wrong OTP.New OTP send");
-			}
 		}
 		catch(err){
 			console.log(err);

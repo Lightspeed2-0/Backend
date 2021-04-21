@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 Router.post("/login", Consignee.Login);
-Router.post("/register",upload.single("PanCard"),Consignee.Register);
+Router.post("/register",upload.fields([{name:"PanCard"}]),Consignee.Register);
 Router.post("/verify", Consignee.Verify);
 Router.post("/panstatus",Consignee.PanStatus);
 
