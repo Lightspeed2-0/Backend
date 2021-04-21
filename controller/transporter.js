@@ -130,7 +130,7 @@ class Transporter{
 			await transporterModel.find({Email:req.body.Email},async (err,transporter)=>{
 				if(err)console.log(err);
 				else{
-					if(transporter.length>0)
+					if(transporter.length == 0)
 					{
 						res.status(404).send("Email Not Found");
 						return;
