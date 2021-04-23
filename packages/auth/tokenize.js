@@ -5,7 +5,11 @@ const JWTsign = (id)=>{
     const token = jwt.sign(payload,key);
     return token;
 }
-
+const JWTverify = (token)=>{
+    const payload = jwt.verify(token,key);
+    return payload
+}
 module.exports = {
-    JWTsign
+    JWTsign,
+    JWTverify
 }

@@ -81,6 +81,7 @@ class Consignee {
 					var newPanPath = path.join(process.cwd(),'/public/uploads/consignee/PAN/'+("PAN"+consignee.id)+path.extname(req.files['PanCard'][0].filename));
 					// newPanPath = 'public/uploads/consignee/PAN/'+("PAN"+consignee.id)+path.extname(req.file.filename);
 					fs.renameSync(path.join(process.cwd(),req.files['PanCard'][0].path),newPanPath)
+					newPanPath = path.join('uploads/consignee/PAN/'+("PAN"+consignee.id)+path.extname(req.files['PanCard'][0].filename));
 					await consignee_login.updateOne({_id:consignee._id},{$set:{PanCard: newPanPath}},{multi:true})
 					res.send({msg:"OTP send",Email:consignee.Email});
 				}

@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const TransporterSchema =new Schema({
     Username: String,
-	Email: String,
+	  Email: String,
     MobileNo: Number,
     PanCard: String,
   	TinCard: String,

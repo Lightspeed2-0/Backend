@@ -111,8 +111,10 @@ class Transporter{
 						else {       
 							newPanPath = path.join(process.cwd(),'/public/uploads/transporter/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename));
 							fs.renameSync(path.join(process.cwd(),req.files['PanCard'][0].path),newPanPath)
+							newPanPath = path.join('uploads/transporter/PAN/'+("PAN"+user.id)+path.extname(req.files['PanCard'][0].filename));
 							newTinPath = path.join(process.cwd(),'/public/uploads/transporter/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename));
 							fs.renameSync(path.join(process.cwd(),req.files['TinCard'][0].path),newTinPath)
+							newTinPath = path.join('uploads/transporter/TIN/'+("TIN"+user.id)+path.extname(req.files['TinCard'][0].filename));
 							await transporterModel.updateOne({_id:user._id},{$set:{PanCard: newPanPath, TinCard : newTinPath }},{multi:true})
 							res.send({msg:"OTP send",Email:user.Email});
 						}
