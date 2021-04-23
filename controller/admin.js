@@ -37,7 +37,7 @@ class Admin{
     }
 
     static async GetConsignee(req,res){
-        await consignee_login.find({PanVerified: false,IsVerified: false},'_id Username PanCard',(err,consignees)=>{
+        await consignee_login.find({PanVerified: false,IsVerified: true},'_id Username PanCard',(err,consignees)=>{
             if(err)
             {
                 console.log(err)
@@ -47,7 +47,8 @@ class Admin{
         });
     }
     static async GetTransporter(req,res){
-        await transporterModel.find({PanVerified: false,IsVerified: false},'_id Username PanCard TinCard',(err,Transporters)=>{
+        // JWTverify(req.body.token)
+        await transporterModel.find({PanVerified: false,IsVerified: true},'_id Username PanCard TinCard',(err,Transporters)=>{
             if(err)
             {
                 console.log(err)
