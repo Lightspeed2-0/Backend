@@ -157,12 +157,12 @@ class Transporter{
 
 	static async PanStatus(req,res){
 		try{
-			await transporterModel.findMany({Email:req.body.Email},(err,transporter)=>{
+			await transporterModel.find({Email:req.body.Email},(err,transporter)=>{
 				if(err){
 					console.log(err);
 				}
-				if(!transporter){
-					res.send(401).send("Your Request had been declined.");
+				if(transporter.length==0){
+					res.status(401).send({msg:"Your Request had been declined.\nRegister again"});
 				}
 				else if(transporter[0].PanVerified===true)
 				{
@@ -176,10 +176,6 @@ class Transporter{
 		catch(err){
 			console.log(err);
 		}
-	}
-
-	static async PanVerify(req,res){
-		
 	}
 }
 module.exports =  Transporter;
