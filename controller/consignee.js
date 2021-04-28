@@ -83,7 +83,7 @@ class Consignee {
 					fs.renameSync(path.join(process.cwd(),req.files['PanCard'][0].path),newPanPath)
 					newPanPath = path.join('uploads/consignee/PAN/'+("PAN"+consignee.id)+path.extname(req.files['PanCard'][0].filename));
 					await consignee_login.updateOne({_id:consignee._id},{$set:{PanCard: newPanPath}},{multi:true})
-					res.send({msg:"OTP send",Email:consignee.Email});
+					res.send({msg:"nootp",Email:consignee.Email});
 				}
 			});
 			}
@@ -95,24 +95,19 @@ class Consignee {
 
 	static async Verify(req,res){
 		try{
-			var user;
-			console.log(req.body)
+			
 			await consignee_login.find({Email:req.body.Email},async(err,consignee)=>{
 				if(err)console.log(err);
 				else{
-					console.log(consignee.length)
 					if(consignee.length===0)
 					{
-						// console.log("here")
 						return res.status(404).send("Email Not Found");
 					}
 					else if(consignee[0].OTP===req.body.OTP)
 					{
 						await consignee_login.updateMany({Email:req.body.Email},{IsVerified:true});
 						await consignee_login.find({Email:req.body.Email},(err,user)=>{
-							// console.log(user)
-							const token = JWTsign(user[0]._id);
-							res.send({msg:"verified",token});
+							res.send({msg:"nopan"});
 						}); 
 					}
 					else{
@@ -127,7 +122,7 @@ class Consignee {
 						mailTransporter.sendMail(mailOptions, function (err, info) {
 							if(err)console.log(err)
 							else{
-								res.status(400).send("New OTP send");
+								res.status(400).send({msg:"Wrong OTP.New OTP send"});
 							}
 						})
 					}

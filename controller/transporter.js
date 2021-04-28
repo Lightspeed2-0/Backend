@@ -56,6 +56,7 @@ class Transporter{
 		try {
 			var user;
 			await transporterModel.find({Email:req.body.Email},(err,transporter)=>{
+				if(user.length>0)
 				user = transporter[0];
 			})
 
