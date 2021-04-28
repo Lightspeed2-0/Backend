@@ -134,11 +134,11 @@ class Consignee {
 	}
 	static async PanStatus(req,res){
 		try{
-			await consignee_login.findMany({Email:req.body.Email},(err,consignee)=>{
+			await consignee_login.find({Email:req.body.Email},(err,consignee)=>{
 				if(err){
 					console.log(err);
 				}
-				if(!consignee){
+				if(consignee.length==0){
 					res.send(401).send("Your Request had been declined.");
 				}
 				else if(consignee[0].PanVerified===true)
