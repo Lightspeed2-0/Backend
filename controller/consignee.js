@@ -95,7 +95,7 @@ class Consignee {
 
 	static async Verify(req,res){
 		try{
-			
+			console.log("here")
 			await consignee_login.find({Email:req.body.Email},async(err,consignee)=>{
 				if(err)console.log(err);
 				else{

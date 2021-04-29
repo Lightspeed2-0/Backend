@@ -56,13 +56,14 @@ class Transporter{
 		try {
 			var user;
 			await transporterModel.find({Email:req.body.Email},(err,transporter)=>{
-				if(user.length>0)
+				if(transporter.length>0)
 				user = transporter[0];
 			})
 
 			if(user)
 			{   
 				res.status(400).send({msg:"Email already exist"});
+				return;
 				// if(user.IsVerified===true && user.PanVerified===true && user.TinVerified===true)
 				// {
 				// res.status(400).send({msg:"Email already exist"});
