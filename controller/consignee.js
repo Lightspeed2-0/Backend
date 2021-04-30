@@ -1,4 +1,4 @@
-const { consignee_login } = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel } = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
@@ -23,7 +23,7 @@ class Consignee {
 				}
 				else {
 					const token = JWTsign(consignee._id);
-					res.send({ token, Email: consignee.Email });
+					res.send({ token, Email: consignee.Email ,Username:consignee.Username});
 				}
 			});
 		}catch (error) {
@@ -95,7 +95,6 @@ class Consignee {
 
 	static async Verify(req,res){
 		try{
-			console.log("here")
 			await consignee_login.find({Email:req.body.Email},async(err,consignee)=>{
 				if(err)console.log(err);
 				else{
@@ -154,8 +153,59 @@ class Consignee {
 			console.log(err);
 		}
 	}
-	static async PanVerify(req,res){
-		
+	static async getTransporter(req,res){
+		try{
+			await transporterModel.find({},'_id Username',(err,transporters)=>{
+				if(err)
+				{
+					console.log(err);
+				}else{
+					console.log(transporters)
+					res.send({transporters})
+				}
+			})
+		}catch(Err)
+		{
+			console.log(Err);
+		}	
+	}
+
+	static async createIndent(req,res){
+		const ConsigneeId = req.decoded.subject;
+		let body = req.body;
+		const {TransporterId,...refdata} = {body}
+		let data = {...refdata,
+					ConsigneeId,
+					Amount : -1,
+					IsPaid : false,
+					PaymentId : null,
+					Status : 0
+					}
+		const indent = new indentModel(data);
+		indent.save((err,indents)=>{
+			if(err){
+				console.log(err);
+				res.status(404);
+			}else{
+				const request = new requestModel({
+					ConsigneeId: ConsigneeId,
+					TransporterId: TransporterId,
+					IndentId: indents._id,
+					TransporterAccept: false,
+					ConsigneeAccept: false,
+					Amount: -1
+				})
+				request.save((err,request)=>{
+					if(err)
+					{
+						console.log(err);
+						res.status(404);
+					}else{
+						res.send({indent:indents});
+					}
+				})
+			}
+		}) 
 	}
 }
 module.exports = Consignee;

@@ -1,5 +1,6 @@
 const express = require("express");
 const { Consignee } = require("../controller/index");
+const { consigneeAuth } = require('../packages/middleware/authindex');
 const Router = express.Router();
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -17,5 +18,7 @@ Router.post("/login", Consignee.Login);
 Router.post("/register",upload.fields([{name:"PanCard"}]),Consignee.Register);
 Router.post("/verify", Consignee.Verify);
 Router.post("/panstatus",Consignee.PanStatus);
+Router.get("/getTransporter",consigneeAuth,Consignee.getTransporter);
+Router.post("/createIndent",consigneeAuth,Consignee.createIndent);
 
 module.exports = Router;
