@@ -34,4 +34,17 @@ const requestSchema = new Schema({
 	ConsigneeAccept: Boolean,
 	Amount: Number	
 })
-module.exports = {indentSchema,requestSchema};
+
+const bidSchema = new Schema({
+	ConsigneeId:String,
+	IndentId: String,
+	BidStatus: String,
+	NoOfBids:Number,
+	Bids:[{
+		TransporterId:String,
+		Username: String,
+		Amount:Number
+	}],
+	Amount: Number
+})
+module.exports = {indentSchema,requestSchema,bidSchema};

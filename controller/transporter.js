@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel } = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -179,5 +179,51 @@ class Transporter{
 			console.log(err);
 		}
 	}
+	bidDetails(bids){
+		for(let i in bids.length){
+			bids[i].append = indentModel.findById({_id:bids[i]._id},(err,res)=>{
+				if(err)
+				{
+					console.log(err)
+				}
+				if(res){
+					return res;
+				}
+			})
+		}
+		return bids;
+	}
+	static async GetBids(req,res){
+		try {
+			await bidModel.find({},'_id indentId',async(err,bids)=>{
+				const Bids= await this.bidDetails(bids);
+				res.send({bids:Bids});
+			})
+		} catch (error) {
+			console.log(error)
+		}
+	}
+	static async DidBids(req,res){
+		try {
+			await bidModel.findById({_id:req.body._id},(err,bidDetail)=>{
+				var bid = {
+					TransporterId: req.body.TransporterId,
+					Username: req.body.Username,
+					Amount:req.body.Amount
+				}
+				bidDetail.bids.push({bid});
+				bidDetail.NoOfBids = bidDetail.NoOfBids+1;
+				bidDetail.save(err=>{
+					if(err){
+						console.log(err)
+					}
+					res.send({msg:"Placed Bid Successfully"});
+				})
+			})
+		} catch (error) {
+			console.log(error)
+		}
+	}
+
 }
 module.exports =  Transporter;

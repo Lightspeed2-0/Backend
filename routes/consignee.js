@@ -18,7 +18,7 @@ Router.post("/login", Consignee.Login);
 Router.post("/register",upload.fields([{name:"PanCard"}]),Consignee.Register);
 Router.post("/verify", Consignee.Verify);
 Router.post("/panstatus",Consignee.PanStatus);
-Router.get("/getTransporter",consigneeAuth,Consignee.getTransporter);
-Router.post("/createIndent",consigneeAuth,Consignee.createIndent);
-
+Router.get("/getTransporter",consigneeAuth,Consignee.GetTransporter);
+Router.post("/createIndent",consigneeAuth,Consignee.CreateIndent);
+Router.get("/yourOrders",consigneeAuth,Consignee.YourOrders)
 module.exports = Router;

@@ -1,8 +1,9 @@
-const { consignee_login,transporterModel , indentModel ,requestModel } = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
 const path = require('path');
+const { static } = require("express");
 
 class Consignee {
 	static async Login(req, res) {
@@ -153,7 +154,7 @@ class Consignee {
 			console.log(err);
 		}
 	}
-	static async getTransporter(req,res){
+	static async GetTransporter(req,res){
 		try{
 			await transporterModel.find({},'_id Username',(err,transporters)=>{
 				if(err)
@@ -170,10 +171,11 @@ class Consignee {
 		}	
 	}
 
-	static async createIndent(req,res){
+	static async CreateIndent(req,res){
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
-		const {TransporterId,...refdata} = {body}
+		const {TransporterId,...refdata} = body
+		// console.log(body)
 		let data = {...refdata,
 					ConsigneeId,
 					Amount : -1,
@@ -207,5 +209,70 @@ class Consignee {
 			}
 		}) 
 	}
+	
+	static async YourOrders(req,res){
+		var ConsigneeId = req.decoded.subject;
+		await indentModel.find({ConsigneeId},async (err,indents)=>{
+			if(err){
+				console.log(err);
+			}
+			// console.log("h")
+			var finalIndents = await Consignee.appendRequests(indents);
+			// console.log(/"ere")
+			res.send({indents : finalIndents});
+		})
+	}
+	static async appendRequests(indents){
+		// console.log(indents.length)
+		for(let i = 0 ;i<indents.length;i++){
+			if(indents[i].Status === -1)
+			{
+				await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
+					// console.log(request[0])
+					indents[i]= {...indents[i]._doc,...{request:request[0]}};
+				}) 
+			}
+		}
+		return indents;
+	}
+	static async CreateBid(req,res){
+		const ConsigneeId = req.decoded.subject;
+		let body = req.body;
+		const {refdata} = {body}
+		let data = {...refdata,
+					ConsigneeId,
+					Amount : -1,
+					IsPaid : false,
+					PaymentId : null,
+					Status : 0
+					}
+		const indent = new indentModel(data);
+		indent.save((err,indents)=>{
+			if(err){
+				console.log(err);
+				res.status(404);
+			}else{
+				const bid = new bidModel({
+					ConsigneeId: ConsigneeId,
+					IndentId: indents._id,
+					BidStatus:"created",
+					NoOfBids:0,
+					Bids:[],
+					Amount: -1
+				})
+				bid.save((err,bid)=>{
+					if(err)
+					{
+						console.log(err);
+						res.status(404);
+					}else{
+						res.send({bid:bids});
+					}
+				})
+			}
+		}) 
+	}
+
 }
+
 module.exports = Consignee;
