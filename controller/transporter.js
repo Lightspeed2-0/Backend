@@ -36,7 +36,7 @@ const AppendConsigneeName = async(requests)=>{
 			// console.log(i,requests[i].Consignee)
 		})
 	}
-	console.log(requests[0].Consignee)
+	// console.log(requests[0].Consignee)
 	return requests;
 }
 const AppendIndent = async(requests)=>{
@@ -260,8 +260,9 @@ class Transporter{
 			{
 				console.log(err);
 			}
-			requests = await AppendConsigneeName(requests);
+			
 			requests = await AppendIndent(requests);
+			requests = await AppendConsigneeName(requests);
 			res.send(requests);
 		})
 	}
