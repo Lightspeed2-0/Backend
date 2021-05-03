@@ -1,5 +1,6 @@
 const express = require("express");
 const { Transporter } = require("../controller/index");
+const { Auth } = require('../packages/middleware/authindex')
 const Router = express.Router();
 const multer = require('multer');
 const storage = multer.diskStorage({
@@ -20,5 +21,5 @@ Router.post("/login", Transporter.Login);
 Router.post("/register",upload.fields([{name:"PanCard"},{name:"TinCard"}]),Transporter.Register);
 Router.post("/verify",Transporter.Verify);
 Router.post("/panstatus",Transporter.PanStatus);
-
+Router.get("/requests",Auth,Transporter.Requests)
 module.exports = Router;

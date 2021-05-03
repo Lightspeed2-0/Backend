@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel ,bidModel, indentModel, requestModel} = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel, consignee_login} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -22,6 +22,35 @@ const OtpSender = async(res,Email,msg)=>{
         }
         
     })
+}
+const AppendConsigneeName = async(requests)=>{
+	for (let i=0;i<requests.length;i++)
+	{
+		await consignee_login.find({_id:requests[i].ConsigneeId}, 'Username',(err,consignee)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			// console.log(consignee)
+			requests[i] = {...requests[i]._doc,Consignee:consignee[0]};
+			// console.log(i,requests[i].Consignee)
+		})
+	}
+	console.log(requests[0].Consignee)
+	return requests;
+}
+const AppendIndent = async(requests)=>{
+	for(let i=0;i<requests.length;i++)
+	{
+		await indentModel.find({_id:requests[i].IndentId}, 'Source Destination OrderDate Volume Weight IsLTL',(err,indent)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			requests[i] = {...requests[i],Indent:indent[0]};
+		})
+	}
+	return requests;
 }
 class Transporter{
     static async Login(req, res) {
@@ -224,6 +253,17 @@ class Transporter{
 			console.log(error)
 		}
 	}
-
+	static async Requests(req,res){
+		var TransporterId = req.decoded.subject;
+		await requestModel.find({TransporterId:TransporterId},async(err,requests)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			requests = await AppendConsigneeName(requests);
+			requests = await AppendIndent(requests);
+			res.send(requests);
+		})
+	}
 }
 module.exports =  Transporter;

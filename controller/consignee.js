@@ -181,7 +181,7 @@ class Consignee {
 					Amount : -1,
 					IsPaid : false,
 					PaymentId : null,
-					Status : 0
+					Status : -1
 					}
 		const indent = new indentModel(data);
 		indent.save((err,indents)=>{
