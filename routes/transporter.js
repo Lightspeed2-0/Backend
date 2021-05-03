@@ -21,5 +21,9 @@ Router.post("/login", Transporter.Login);
 Router.post("/register",upload.fields([{name:"PanCard"},{name:"TinCard"}]),Transporter.Register);
 Router.post("/verify",Transporter.Verify);
 Router.post("/panstatus",Transporter.PanStatus);
-Router.get("/requests",Auth,Transporter.Requests)
+Router.get("/requests",Auth,Transporter.Requests);
+Router.post("/viewConsignee",Auth,Transporter.ViewConsignee);
+Router.post("/addDriver",Auth,Transporter.AddDriver);
+Router.post("/removeDriver",Auth,Transporter.RemoveDriver);
+Router.post("/respondRequest",Auth,Transporter.RespondRequest);
 module.exports = Router;

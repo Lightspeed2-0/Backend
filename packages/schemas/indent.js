@@ -24,16 +24,21 @@ const indentSchema =new Schema({
 	PaymentId : String,
 	Status : Number,
 	IsLTL : Boolean
-});
+},{
+	timestamps:true
+  });
 
 const requestSchema = new Schema({
     ConsigneeId: String,
 	TransporterId: String,
 	IndentId: String,
-	TransporterAccept: Boolean,
-	ConsigneeAccept: Boolean,
-	Amount: Number	
-})
+	TransporterDeleted: Boolean,
+	ConsigneeDeleted: Boolean,
+	Amount: Number,
+	Status: Number	
+},{
+	timestamps:true
+  })
 
 const bidSchema = new Schema({
 	ConsigneeId:String,
@@ -46,5 +51,7 @@ const bidSchema = new Schema({
 		Amount:Number
 	}],
 	Amount: Number
-})
+},{
+	timestamps:true
+  })
 module.exports = {indentSchema,requestSchema,bidSchema};

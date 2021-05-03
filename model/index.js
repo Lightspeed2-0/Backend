@@ -1,5 +1,5 @@
 const {consignee_login} = require('./consignee')
-const {transporterModel} = require('./transporter');
+const {transporterModel,driverModel} = require('./transporter');
 const {adminModel} = require('./admin');
 const {indentModel,requestModel, bidModel} = require('./indent');
 module.exports = {
@@ -8,5 +8,6 @@ module.exports = {
     adminModel,
     indentModel,
     requestModel,
-    bidModel
+    bidModel,
+    driverModel
 }

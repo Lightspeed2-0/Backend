@@ -16,5 +16,20 @@ const TransporterSchema =new Schema({
     Rejected: String,
     OTP: Number,
     Role: Number
+},{
+  timestamps:true
 });
-module.exports = {TransporterSchema};
+
+const DriverSchema = new Schema({
+  Username : String,
+  Email : String,
+  MobileNo : Number,
+  DrivingLicense : String,
+  Password : String,
+  Rating : Number,
+  TransporterId: String,
+  TransporterName : String,
+},{
+  timestamps:true
+});
+module.exports = {TransporterSchema,DriverSchema};

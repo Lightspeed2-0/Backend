@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel ,bidModel, indentModel, requestModel, consignee_login} = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -264,6 +264,93 @@ class Transporter{
 			requests = await AppendConsigneeName(requests);
 			res.send({requests});
 		})
+	}
+
+	static async ViewConsignee(req,res){
+		await consignee_login.findById({_id:req.body.ConsigneeId},'Username Email MobileNo Rating',(err,consignee)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			res.send({consignee});
+		})
+	}
+
+	static async AddDriver(req,res){
+		var TransporterId = req.decoded.subject;
+		await transporterModel.findById({_id:TransporterId},async(err,transporter)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			if(transporter)
+			{
+				const data ={
+					...req.body,
+					Rating : 0,
+					TransporterId,
+					TransporterName : transporter.Username
+				}
+				const driver = new driverModel(data);
+				driver.save(err=>{
+					if(err)
+					{
+						console.log(err);
+						res.status(500);
+					}else{
+						res.send({msg:"added"});
+					}
+				})
+			}
+		})
+	}
+
+	static async RemoveDriver(req,res){
+		var TransporterId = req.decoded.subject;
+		await driverModel.deleteMany({_id:req.body._id,TransporterId:TransporterId},(err,driver)=>{
+			if(err)
+			{
+				console.log(err)
+			}
+			if(driver){
+				res.send({msg:"removed"});
+			}else{
+				res.send({msg:"failed"});
+			}
+		})
+	}
+
+	static async RespondRequest(req,res){
+		var TransporterId = req.decoded.subject;
+		if(req.body.IsAccepted === true)
+		{
+			requestModel.updateMany({TransporterId:TransporterId,_id:req.body.RequestId},{Status:2,Amount:req.body.Amount},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				console.log(request)
+				if(request.n>0)
+				{
+					res.send({msg:"success"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}else{
+			requestModel.updateMany({TransporterId:TransporterId,_id:req.body.RequestId},{Status:1},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				if(request.length>0)
+				{
+					res.send({msg:"success"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}
 	}
 }
 module.exports =  Transporter;

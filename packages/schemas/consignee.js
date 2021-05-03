@@ -13,5 +13,7 @@ const consigneeLoginSchema =new Schema({
     PanCard: String,
     OTP: Number,
     Role:Number
-    });
+    },{
+        timestamps:true
+      });
 module.exports = {consigneeLoginSchema};

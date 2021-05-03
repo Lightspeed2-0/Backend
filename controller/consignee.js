@@ -193,9 +193,10 @@ class Consignee {
 					ConsigneeId: ConsigneeId,
 					TransporterId: TransporterId,
 					IndentId: indents._id,
-					TransporterAccept: false,
-					ConsigneeAccept: false,
-					Amount: -1
+					TransporterDeleted: false,
+					ConsigneeDeleted: false,
+					Amount: -1,
+					Status : 0
 				})
 				request.save((err,request)=>{
 					if(err)
@@ -272,7 +273,24 @@ class Consignee {
 			}
 		}) 
 	}
-
+	static async ViewTransporter(req,res){
+		await transporterModel.findById({_id:req.body.TransporterId},'Username Email MobileNo Rating',(err,transporter)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			res.send({transporter});
+		})
+	}
+	static async ViewDriver(req,res){
+		await driverModel.findById({_id:req.body.DriverId},'Username Email MobileNo Rating',(err,driver)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			res.send({driver});
+		})
+	}
 }
 
 module.exports = Consignee;
