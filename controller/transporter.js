@@ -34,13 +34,15 @@ const AppendConsigneeName = async(requests)=>{
 			requests[i] = {...requests[i],Consignee:consignee[0]};
 		})
 	}
-	await consignee_login.find({_id:requests[0].ConsigneeId}, 'Username',(err,consignee)=>{
-		if(err)
-		{
-			console.log(err);
-		}
-		requests[i] = {...requests[i],Consignee:consignee[0]};
-	})
+	if(requests.length>=0){
+			await consignee_login.find({_id:requests[0].ConsigneeId}, 'Username',(err,consignee)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			requests[0] = {...requests[0],Consignee:consignee[0]};
+		})
+	}
 	return requests;
 }
 const AppendIndent = async(requests)=>{
