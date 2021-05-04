@@ -20,5 +20,6 @@ Router.post("/verify", Consignee.Verify);
 Router.post("/panstatus",Consignee.PanStatus);
 Router.get("/getTransporter",Auth,Consignee.GetTransporter);
 Router.post("/createIndent",Auth,Consignee.CreateIndent);
-Router.get("/yourOrders",Auth,Consignee.YourOrders)
+Router.get("/yourOrders",Auth,Consignee.YourOrders);
+Router.post("/indentConfirm",Auth,Consignee.IndentConfirm);
 module.exports = Router;

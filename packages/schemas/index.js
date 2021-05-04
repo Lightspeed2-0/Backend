@@ -1,7 +1,8 @@
 const {consigneeLoginSchema} = require('./consignee');
 const {TransporterSchema,DriverSchema} = require('./transporter');
 const {AdminSchema} = require('./admin');
-const {indentSchema,requestSchema,bidSchema} = require('./indent')
+const {indentSchema,requestSchema,bidSchema} = require('./indent');
+const {OrderSchema} = require('./order');
 module.exports = {
     consigneeLoginSchema,
     AdminSchema,
@@ -9,5 +10,6 @@ module.exports = {
     indentSchema,
     requestSchema,
     bidSchema,
-    DriverSchema
+    DriverSchema,
+    OrderSchema
 }

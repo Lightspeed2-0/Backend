@@ -1,4 +1,4 @@
-const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel} = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
@@ -290,6 +290,34 @@ class Consignee {
 			}
 			res.send({driver});
 		})
+	}
+
+	static async IndentConfirm(req,res){
+		var ConsigneeId = req.decoded.subject;
+		if(req.body.IsAccepted === true)
+		{
+			await requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:4},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				res.send({msg:"Payment Successful"})
+			});
+
+		}else{
+			requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:3},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				if(request.n>0)
+				{
+					res.send({msg:"successfully declined"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}
 	}
 }
 
