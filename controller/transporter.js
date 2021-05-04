@@ -24,20 +24,23 @@ const OtpSender = async(res,Email,msg)=>{
     })
 }
 const AppendConsigneeName = async(requests)=>{
-	for (let i=0;i<requests.length;i++)
+	for (let i=requests.length-1;i>=0;i--)
 	{
 		await consignee_login.find({_id:requests[i].ConsigneeId}, 'Username',(err,consignee)=>{
 			if(err)
 			{
 				console.log(err);
 			}
-			// console.log(consignee)
-			requests[i] = {...requests[i]._doc,Consignee:consignee[0]};
-			// console.log(i,requests[i].Consignee)
+			requests[i] = {...requests[i],Consignee:consignee[0]};
 		})
 	}
-	requests = await AppendIndent(requests);
-	// console.log(requests[0].Consignee)
+	await consignee_login.find({_id:requests[0].ConsigneeId}, 'Username',(err,consignee)=>{
+		if(err)
+		{
+			console.log(err);
+		}
+		requests[i] = {...requests[i],Consignee:consignee[0]};
+	})
 	return requests;
 }
 const AppendIndent = async(requests)=>{
@@ -48,9 +51,10 @@ const AppendIndent = async(requests)=>{
 			{
 				console.log(err);
 			}
-			requests[i] = {...requests[i],Indent:indent[0]};
+			requests[i] = {...requests[i]._doc,Indent:indent[0]};
 		})
 	}
+	requests = await AppendConsigneeName(requests);
 	return requests;
 }
 class Transporter{
@@ -261,7 +265,7 @@ class Transporter{
 			{
 				console.log(err);
 			}
-			requests = await AppendConsigneeName(requests);
+			requests = await AppendIndent(requests);
 			res.send({requests});
 		})
 	}
@@ -276,6 +280,16 @@ class Transporter{
 		})
 	}
 
+	static async GetDriver(req,res){
+		var TransporterId = req.decoded.subject;
+		await driverModel.find({TransporterId : TransporterId},(err,drivers)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			res.send({drivers});
+		})
+	}
 	static async AddDriver(req,res){
 		var TransporterId = req.decoded.subject;
 		await transporterModel.findById({_id:TransporterId},async(err,transporter)=>{
