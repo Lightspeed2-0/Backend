@@ -225,12 +225,22 @@ class Consignee {
 	}
 	static async appendRequests(indents){
 		// console.log(indents.length)
-		for(let i = 0 ;i<indents.length;i++){
+		for(let i =indents.length-1;i>=0;i--){
 			if(indents[i].Status === -1)
 			{
 				await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
 					// console.log(request[0])
 					indents[i]= {...indents[i]._doc,...{request:request[0]}};
+				}) 
+			}
+		}
+		if(indents.length>=0)
+		{
+			if(indents[0].Status === -1)
+			{
+				await requestModel.find({IndentId:indents[0]._id},(err,request)=>{
+					// console.log(request[0])
+					indents[0]= {...indents[0]._doc,...{request:request[0]}};
 				}) 
 			}
 		}

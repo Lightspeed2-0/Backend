@@ -5,6 +5,7 @@ const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
 const path = require('path');
 const { fstat } = require("fs");
+const { OrderSchema } = require("../packages/schemas");
 
 const OtpSender = async(res,Email,msg)=>{
     var OTP = Math.floor(Math.random()*(800000)+100000);
@@ -366,6 +367,27 @@ class Transporter{
 					res.send({msg:"failed"});
 				}
 			})
+		}
+	}
+	static async AllocateDriver(req,res){
+		var TransporterId = req.decoded.subject;
+		try{
+			var request = await requestModel.findById({_id:req.body.RequestId});
+			await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount});
+			request.Status = 5;
+			var indent = [request.IndentId];
+			request.save();
+			var order= new OrderSchema({indent: indent,TransporterId,DriverId : req.body.DriverId});
+			order.save(err=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				res.send({msg:"Driver allocated. Order Confirmed."});
+			})
+		}catch(err)
+		{
+			console.log(err);
 		}
 	}
 }
