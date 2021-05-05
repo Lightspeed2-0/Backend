@@ -220,6 +220,7 @@ class Consignee {
 			// console.log("h")
 			var finalIndents = await Consignee.appendRequests(indents);
 			// console.log(/"ere")
+			// console.log(finalIndents)
 			res.send({indents : finalIndents});
 		})
 	}
@@ -238,9 +239,10 @@ class Consignee {
 		{
 			if(indents[0].Status === -1)
 			{
+				// console.log(indents[0])
 				await requestModel.find({IndentId:indents[0]._id},(err,request)=>{
 					// console.log(request[0])
-					indents[0]= {...indents[0]._doc,...{request:request[0]}};
+					indents[0]= {...indents[0],...{request:request[0]}};
 				}) 
 			}
 		}

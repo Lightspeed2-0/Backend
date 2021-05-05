@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel} = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel, orderModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -263,7 +263,7 @@ class Transporter{
 	}
 	static async Requests(req,res){
 		var TransporterId = req.decoded.subject;
-		await requestModel.find({TransporterId:TransporterId},async(err,requests)=>{
+		await requestModel.find({TransporterId:TransporterId,Status:{$lt:5}},async(err,requests)=>{
 			if(err)
 			{
 				console.log(err);
@@ -377,13 +377,13 @@ class Transporter{
 			request.Status = 5;
 			var indent = [request.IndentId];
 			request.save();
-			var order= new OrderSchema({indent: indent,TransporterId,DriverId : req.body.DriverId});
+			var order= new orderModel({indent: indent,TransporterId,DriverId : req.body.DriverId});
 			order.save(err=>{
 				if(err)
 				{
 					console.log(err);
 				}
-				res.send({msg:"Driver allocated. Order Confirmed."});
+				res.send({msg:"allocated"});
 			})
 		}catch(err)
 		{
