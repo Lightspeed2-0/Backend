@@ -313,7 +313,9 @@ class Consignee {
 				{
 					console.log(err);
 				}
+				console.log(req.body.IndentId)
 				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true},err=>{
+					console.log("sfs");
 					res.send({msg:"Payment Successful"});
 				});
 				
