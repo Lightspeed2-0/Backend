@@ -397,7 +397,7 @@ class Transporter{
 				{
 					console.log(err);
 				}
-				if(request.length>0)
+				if(request.n>0)
 				{
 					res.send({msg:"success"});
 				}else{

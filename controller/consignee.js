@@ -308,11 +308,12 @@ class Consignee {
 		var ConsigneeId = req.decoded.subject;
 		if(req.body.IsAccepted === true)
 		{
-			await requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:4,IsPaid : true},(err,request)=>{
+			await requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:4},async(err,request)=>{
 				if(err)
 				{
 					console.log(err);
 				}
+				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true});
 				res.send({msg:"Payment Successful"})
 			});
 
