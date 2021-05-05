@@ -49,7 +49,7 @@ const AppendConsigneeName = async(requests)=>{
 const AppendIndent = async(requests)=>{
 	for(let i=0;i<requests.length;i++)
 	{
-		await indentModel.find({_id:requests[i].IndentId}, 'Source Destination OrderDate Volume Weight IsLTL',(err,indent)=>{
+		await indentModel.find({_id:requests[i].IndentId}, 'Source Destination OrderDate Volume Weight IsPaid IsLTL',(err,indent)=>{
 			if(err)
 			{
 				console.log(err);

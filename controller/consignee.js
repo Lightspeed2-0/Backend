@@ -313,8 +313,10 @@ class Consignee {
 				{
 					console.log(err);
 				}
-				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true});
-				res.send({msg:"Payment Successful"})
+				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true},err=>{
+					res.send({msg:"Payment Successful"});
+				});
+				
 			});
 
 		}else{
