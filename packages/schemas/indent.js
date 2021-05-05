@@ -23,6 +23,7 @@ const indentSchema =new Schema({
 	IsPaid : Boolean,
 	PaymentId : String,
 	Status : Number,
+	StatusStack : [{Date:String ,Time : String}],
 	IsLTL : Boolean
 },{
 	timestamps:true

@@ -308,7 +308,7 @@ class Consignee {
 		var ConsigneeId = req.decoded.subject;
 		if(req.body.IsAccepted === true)
 		{
-			await requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:4},(err,request)=>{
+			await requestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.RequestId},{Status:4,IsPaid : true},(err,request)=>{
 				if(err)
 				{
 					console.log(err);

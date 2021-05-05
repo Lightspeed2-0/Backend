@@ -24,8 +24,10 @@ Router.post("/panstatus",Transporter.PanStatus);
 Router.get("/requests",Auth,Transporter.Requests);
 Router.post("/viewConsignee",Auth,Transporter.ViewConsignee);
 Router.post("/allocateDriver",Auth,Transporter.AllocateDriver);
-Router.post("/getDriver",Auth,Transporter.GetDriver);
+Router.get("/getDriver",Auth,Transporter.GetDriver);
 Router.post("/addDriver",Auth,Transporter.AddDriver);
 Router.post("/removeDriver",Auth,Transporter.RemoveDriver);
 Router.post("/respondRequest",Auth,Transporter.RespondRequest);
+Router.get("/getOrders",Auth,Transporter.GetOrders);
+
 module.exports = Router;

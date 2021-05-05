@@ -60,6 +60,43 @@ const AppendIndent = async(requests)=>{
 	requests = await AppendConsigneeName(requests);
 	return requests;
 }
+
+const appendIndents = async (Order)=>{
+    for(let i=0;i<Order.Indents.length;i++)
+    {
+        await indentModel.findById({_id:Order.Indents[i].IndentId},(err,indent)=>{
+            if(err)
+            {
+                console.log(err);
+            }
+            Order.Indents[i] = indent;
+        })  
+    }
+    // if(Order.length>0)
+    // {
+    //     let i = Order.length-1;
+    //     await indentModel.findById({_id:Order.Indents[i].IndentId},(err,indent)=>{
+    //         if(err)
+    //         {
+    //             console.log(err);
+    //         }
+    //         Order.Indents[i] = indent;
+    //     })  
+    // }
+    return Order;
+}
+const appendOrders = async(Orders)=>{
+    for(let i=0;i<Orders.length;i++)
+    {
+        Orders[i] = await appendIndents(Orders[i]._doc);
+    }
+    // if(Order.length>0)
+    // {
+    //     let i = Order.length-1;
+    //     Orders[i] = await appendIndents(Orders[i]._doc);
+    // }
+    return Orders;
+}
 class Transporter{
     static async Login(req, res) {
         try {
@@ -373,22 +410,40 @@ class Transporter{
 		var TransporterId = req.decoded.subject;
 		try{
 			var request = await requestModel.findById({_id:req.body.RequestId});
-			await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount});
-			request.Status = 5;
-			var indent = [request.IndentId];
-			request.save();
-			var order= new orderModel({indent: indent,TransporterId,DriverId : req.body.DriverId});
-			order.save(err=>{
-				if(err)
-				{
-					console.log(err);
-				}
-				res.send({msg:"allocated"});
-			})
+			if(request)
+			{
+				await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount,Status:0});
+				request.Status = 5;
+				request.save();
+				var order= new orderModel({Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
+				order.save(err=>{
+					if(err)
+					{
+						console.log(err);
+					}
+					res.send({msg:"allocated"});
+				})
+			}
+			else{
+				res.status(400).send({msg:"No such request"});
+			}
+			
 		}catch(err)
 		{
 			console.log(err);
 		}
+	}
+
+	static async GetOrders(req,res){
+		var TransporterId = req.decoded.subject;
+		await orderModel.find({TransporterId:TransporterId},async(err,Orders)=>{
+			if(err)
+                {
+                    console.log(err);
+                }
+                Orders = await appendOrders(Orders);
+                res.send({Orders});
+		})
 	}
 }
 module.exports =  Transporter;
