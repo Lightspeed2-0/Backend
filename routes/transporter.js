@@ -29,5 +29,6 @@ Router.post("/addDriver",Auth,Transporter.AddDriver);
 Router.post("/removeDriver",Auth,Transporter.RemoveDriver);
 Router.post("/respondRequest",Auth,Transporter.RespondRequest);
 Router.get("/getOrders",Auth,Transporter.GetOrders);
+Router.post("/cancelOrder",Auth,Transporter.CancelOrder);
 
 module.exports = Router;

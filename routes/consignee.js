@@ -22,4 +22,5 @@ Router.get("/getTransporter",Auth,Consignee.GetTransporter);
 Router.post("/createIndent",Auth,Consignee.CreateIndent);
 Router.get("/yourOrders",Auth,Consignee.YourOrders);
 Router.post("/indentConfirm",Auth,Consignee.IndentConfirm);
+Router.post("/cancelOrder",Auth,Consignee.CancelOrder);
 module.exports = Router;

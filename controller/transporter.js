@@ -433,7 +433,6 @@ class Transporter{
 			{
 				await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount,Status:0});
 				request.Status = 5;
-				request.save();
 				var order= new orderModel({Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
 				order.save(err=>{
 					if(err)
@@ -441,6 +440,8 @@ class Transporter{
 						console.log(err);
 					}
 					res.send({msg:"allocated"});
+				}).then(order=>{
+					
 				})
 			}
 			else{
@@ -462,6 +463,29 @@ class Transporter{
                 }
                 Orders = await appendOrders(Orders);
                 res.send({Orders});
+		})
+	}
+
+	static async CancelOrder(req,res){
+		var TransporterId = req.decoded.subject;
+		var IndentId = req.body.IndentId;
+		// console.log(TransporterId)
+		indentModel.find({_id:IndentId,TransporterId:TransporterId}).then((indent)=>{
+			if(indent.length>0)
+			{ 
+				if(indent[0].Status<2)
+				{
+					indentModel.updateOne({_id:indent[0]._id},{Status:5}).then(indent=>{
+						res.send({msg:"cancel success"});
+					})
+				}
+				else{
+					res.send({msg:"cancel failed"});
+				}
+			}
+			else{
+				res.status(400).send({msg:"no order found"});
+			}
 		})
 	}
 }

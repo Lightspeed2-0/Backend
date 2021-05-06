@@ -336,6 +336,22 @@ class Consignee {
 			})
 		}
 	}
+
+	static async CancelOrder(req,res){
+		var ConsigneeId = req.decoded.subject;
+		var IndentId = req.body.IndentId;
+		indentModel.find({_id:IndentId,ConsigneeId:ConsigneeId}).then((indent)=>{
+			if(indent[0].Status<2)
+			{
+				indentModel.updateOne({_id:indent[0]._id},{Status:5}).then(indent=>{
+					res.send({msg:"cancel success"});
+				})
+			}
+			else{
+				res.send({msg:"cancel failed"});
+			}
+		})
+	} 
 }
 
 module.exports = Consignee;

@@ -110,23 +110,28 @@ class Driver{
         var TimeNow = new Date();
         var date = new Date().toLocaleDateString();
         TimeNow = TimeNow.toLocaleTimeString(); 
+        console.log(req.body)
         indentModel.findById({_id:req.body.IndentId},(err,indent)=>{
-            if(indent.Status>=5)
-            {
-                res.status(400).send({msg:"Order Cancelled"});
-            }
-            else if(indent.Status>req.body.Status){
-                res.status(400).send({msg:"Invalid Updation"});
-            }
-            else if(indent.Status!==req.body.Status-1)
-            {
-                res.status(400).send({msg:"Updation can't be skipped"});
-    
+            if(indent.length>0){
+                if(indent.Status>=5)
+                {
+                    res.status(400).send({msg:"Order Cancelled"});
+                }
+                else if(indent.Status>req.body.Status){
+                    res.status(400).send({msg:"Invalid Updation"});
+                }
+                else if(indent.Status!==req.body.Status-1)
+                {
+                    res.status(400).send({msg:"Updation can't be skipped"});
+        
+                }else{
+                    indentModel.updateOne({_id:req.body.IndentId},{Status:req.body.Status,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true },(err,indents)=>{
+                            res.send("Updated");
+                        })
+                }
             }else{
-                indentModel.updateOne({_id:req.body.IndentId},{Status:req.body.Status,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true },(err,indents)=>{
-                        res.send("Updated");
-                    })
-            }    
+                res.status(400).send({msg:"No Order Found"})
+            }
         });
         // indentModel.updateOne({_id:req.body.IndentId},{Status:req.body.Status,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true },(err,indents)=>{
         //     res.send("Updated");
