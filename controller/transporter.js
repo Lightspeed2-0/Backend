@@ -35,7 +35,7 @@ const AppendConsigneeName = async(requests)=>{
 			requests[i] = {...requests[i],Consignee:consignee[0]};
 		})
 	}
-	if(requests.length>=0){
+	if(requests.length>0){
 			await consignee_login.find({_id:requests[0].ConsigneeId}, 'Username',(err,consignee)=>{
 			if(err)
 			{
@@ -67,13 +67,16 @@ const appendIndents = async (Order)=>{
     for(let i=0;i<Order.Indents.length;i++)
     {
 		// console.log(Order.Indents[i])
-        await indentModel.findById({_id:Order.Indents[i].IndentId},(err,indent)=>{
+        await indentModel.findById({_id:Order.Indents[i].IndentId},async(err,indent)=>{
             if(err)
             {
                 console.log(err);
             }
 			// console.log(indent)
             Order.Indents[i] = {...indent._doc};
+			await consignee_login.findById({_id:indent._doc.ConsigneeId},'Username',(err,consignee)=>{
+				Order.Indents[i] = {...Order.Indents[i],Consignee:consignee._doc};
+			})
         })  
     }
     // if(Order.Indents.length>0)
@@ -97,6 +100,9 @@ const appendOrders = async(Orders)=>{
 		// console.log(Orders[i])
 		// console.log(i)
         Orders[i] = await appendIndents(Orders[i]._doc);
+		await  driverModel.findById({_id:Orders[i].DriverId},'Username',(err,driver)=>{
+			Orders[i] = {...Orders[i],Driver:driver._doc}
+		})
 		// console.log(Orders[i])
 		// console.log(i)
     }

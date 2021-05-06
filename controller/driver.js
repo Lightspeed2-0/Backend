@@ -9,38 +9,57 @@ const path = require('path');
 const transporter = require("../packages/auth/mailer");
 
 const appendIndents = async (Order)=>{
+	// console.log(Order.Indents)
+
     for(let i=0;i<Order.Indents.length;i++)
     {
-        await indentModel.findById({_id:Order.Indents[i].IndentId},(err,indent)=>{
+		// console.log(Order.Indents[i])
+        await indentModel.findById({_id:Order.Indents[i].IndentId},async(err,indent)=>{
             if(err)
             {
                 console.log(err);
             }
-            Order.Indents[i] = indent;
+			// console.log(indent)
+            Order.Indents[i] = {...indent._doc};
+			await consignee_login.findById({_id:indent._doc.ConsigneeId},'Username',(err,consignee)=>{
+				Order.Indents[i] = {...Order.Indents[i],Consignee:consignee._doc};
+			})
         })  
     }
-    // if(Order.length>0)
+    // if(Order.Indents.length>0)
     // {
-    //     let i = Order.length-1;
-    //     await indentModel.findById({_id:Order.Indents[i].IndentId},(err,indent)=>{
-    //         if(err)
-    //         {
-    //             console.log(err);
-    //         }
-    //         Order.Indents[i] = indent;
-    //     })  
+    //     let i = Order.Indents.length-1;
+	// 	var _id = Order.Indents[i]
+	// 	// console.log(i)
+    //     // await indentModel.findById({_id:_id},(err,indent)=>{
+    //     //     if(err)
+    //     //     {
+    //     //         console.log(err);
+    //     //     }
+    //     //     Order.Indents[i] = indent;
+    //     // })  
     // }
     return Order;
 }
 const appendOrders = async(Orders)=>{
     for(let i=0;i<Orders.length;i++)
     {
+		// console.log(Orders[i])
+		// console.log(i)
         Orders[i] = await appendIndents(Orders[i]._doc);
+		await  driverModel.findById({_id:Orders[i].DriverId},'Username',(err,driver)=>{
+			Orders[i] = {...Orders[i],Driver:driver._doc}
+		})
+		// console.log(Orders[i])
+		// console.log(i)
     }
-    // if(Order.length>0)
+    // if(Orders.length>0)
     // {
-    //     let i = Order.length-1;
-    //     Orders[i] = await appendIndents(Orders[i]._doc);
+    //     let i = Orders.length-1;
+	// 	// console.log(Orders[0])
+	// 	// console.log(i)
+		
+    //     // Orders[i] = await appendIndents(Orders[i]);
     // }
     return Orders;
 }
