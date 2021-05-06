@@ -112,7 +112,7 @@ class Driver{
         TimeNow = TimeNow.toLocaleTimeString(); 
         console.log(req.body)
         indentModel.findById({_id:req.body.IndentId},(err,indent)=>{
-            if(indent.length>0){
+            if(indent){
                 if(indent.Status>=5)
                 {
                     res.status(400).send({msg:"Order Cancelled"});

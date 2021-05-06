@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const indentSchema =new Schema({
     ConsigneeId : String,
 	TransporterId: String,
+	OrderId: String,
 	Source : {
 			Address : String,
 			City : String,

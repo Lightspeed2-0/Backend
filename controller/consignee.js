@@ -1,4 +1,4 @@
-const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel} = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel, driverModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
@@ -178,6 +178,7 @@ class Consignee {
 		// console.log(body)
 		let data = {...refdata,
 					ConsigneeId,
+					OrderId: "",
 					Amount : -1,
 					IsPaid : false,
 					PaymentId : null,
@@ -232,7 +233,23 @@ class Consignee {
 				await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
 					// console.log(request[0])
 					indents[i]= {...indents[i]._doc,...{request:request[0]}};
+					// console.log(indents[i])
+					transporterModel.findById({_id:request[0].TransporterId},'Username').then(transporter=>{
+						indents[i] = {...indents[i],Transporter:transporter}
+					})
 				}) 
+				
+			}else{
+				await transporterModel.findById({_id:indents[i].TransporterId},'Username').then(transporter=>{
+					indents[i] = {...indents[i]._doc,Transporter:transporter}
+				})
+				await orderModel.findById({_id:indents[i].OrderId}).then(async (order)=>{
+					await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
+						indents[i] = {...indents[i],driver:driver}
+					})
+					
+				})
+				
 			}
 		}
 		if(indents.length>=0)

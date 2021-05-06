@@ -44,6 +44,7 @@ const AppendConsigneeName = async(requests)=>{
 			requests[0] = {...requests[0],Consignee:consignee[0]};
 		})
 	}
+	console.log(requests[4]);
 	return requests;
 }
 const AppendIndent = async(requests)=>{
@@ -433,15 +434,18 @@ class Transporter{
 			{
 				await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount,Status:0});
 				request.Status = 5;
+				request.save();
 				var order= new orderModel({Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
-				order.save(err=>{
+				order.save(async(err,order)=>{
 					if(err)
 					{
 						console.log(err);
 					}
+					var TimeNow = new Date();
+					var date = new Date().toLocaleDateString();
+					TimeNow = TimeNow.toLocaleTimeString(); 
+					await indentModel.updateMany({_id:request.IndentId},{OrderId:order._id,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true });
 					res.send({msg:"allocated"});
-				}).then(order=>{
-					
 				})
 			}
 			else{
