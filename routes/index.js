@@ -32,11 +32,11 @@ router.put('/contactForm',adminAuth,async(req,res)=>{
     mailTransporter.sendMail(mailOptions, function (err, info) {
         if(err)console.log(err);        
     })
-    contactFormModel.deleteOne({_id:req.body._id}).then(err=>{
+    await contactFormModel.deleteMany({_id:req.body._id}).then(err=>{
         res.send({msg:"Replied"});
     });
 });
-router.delete('/contactForm',adminAuth,async(req,res)=>{
+router.post('/deleteContactForm',adminAuth,async(req,res)=>{
     contactFormModel.deleteMany({_id:req.body._id}).then(err=>{
         res.send({msg:"deleted"});
     });

@@ -126,8 +126,8 @@ class Driver{
         
                 }else{
                     indentModel.updateOne({_id:req.body.IndentId},{Status:req.body.Status,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true },(err,indents)=>{
-                            res.send("Updated");
-                        })
+                        res.send({msg:"Updated"});
+                    })
                 }
             }else{
                 res.status(400).send({msg:"No Order Found"})
