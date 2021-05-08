@@ -96,14 +96,15 @@ class Consignee {
 
 	static async Verify(req,res){
 		try{
+			console.log(req.body)
 			await consignee_login.find({Email:req.body.Email},async(err,consignee)=>{
 				if(err)console.log(err);
 				else{
 					if(consignee.length===0)
 					{
-						return res.status(404).send("Email Not Found");
+						return res.status(404).send({msg:"Email Not Found"});
 					}
-					else if(consignee[0].OTP===req.body.OTP)
+					else if(consignee[0].OTP==req.body.OTP)
 					{
 						await consignee_login.updateMany({Email:req.body.Email},{IsVerified:true});
 						await consignee_login.find({Email:req.body.Email},(err,user)=>{

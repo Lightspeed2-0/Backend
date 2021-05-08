@@ -233,7 +233,7 @@ class Transporter{
 						res.status(404).send("Email Not Found");
 						return;
 					}
-					else if(transporter[0].OTP===req.body.OTP)
+					else if(transporter[0].OTP==req.body.OTP)
 					{
 						await transporterModel.updateMany({Email:req.body.Email},{IsVerified:true});
 						await transporterModel.find({Email:req.body.Email},(err,user)=>{
