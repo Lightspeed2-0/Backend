@@ -8,6 +8,9 @@ const appendQuotes = async (bids)=>{
 	for(let i=0;i<bids.length;i++)
 	{
 		bids[i]=bids[i]._doc;
+		await indentModel.findById({_id:bids[i].IndentId}).then(indent=>{
+			bids[i] = {...bids[i],indent:indent._doc}
+		})
 		await quotationModel.find({BidId:bids[i]._id}).sort({Amount:1}).then(quotes=>{
 			// console.log(quotes)
 			bids[i]={...bids[i],quotes};
@@ -279,8 +282,7 @@ class Consignee {
 	static async CreateBid(req,res){
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
-		const {refdata} = {body}
-		let data = {...refdata,
+		let data = {...body,
 					ConsigneeId,
 					Amount : -1,
 					IsPaid : false,

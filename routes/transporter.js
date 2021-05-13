@@ -33,5 +33,5 @@ Router.get("/getOrders",Auth,Transporter.GetOrders);
 Router.post("/cancelOrder",Auth,Transporter.CancelOrder);
 Router.get("/getBids",Auth,Transporter.GetBids);
 Router.post("/didBid",Auth,Transporter.DidBids);
-Router.post('/myQuotes',Auth,Transporter.MyQuotes);
+Router.get('/myQuotes',Auth,Transporter.MyQuotes);
 module.exports = Router;
