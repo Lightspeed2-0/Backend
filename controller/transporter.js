@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel, orderModel} = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel, orderModel, quotationModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -44,7 +44,7 @@ const AppendConsigneeName = async(requests)=>{
 			requests[0] = {...requests[0],Consignee:consignee[0]};
 		})
 	}
-	console.log(requests[4]);
+	// console.log(requests[4]);
 	return requests;
 }
 const AppendIndent = async(requests)=>{
@@ -116,6 +116,18 @@ const appendOrders = async(Orders)=>{
     //     // Orders[i] = await appendIndents(Orders[i]);
     // }
     return Orders;
+}
+const appendBid= async(quotes)=>{
+	for (let i=0;i< quotes.length;i++)
+	{
+		await bidModel.findById({_id:quotes[i].BidId}).then(async(bid)=>{
+			quotes[i] = {...quotes[i],bid:bid};
+			await indentModel.findById({_id:bid.IndentId}).then(indent=>{
+				quotes[i]= {...quotes[i],indent:indent};
+			})
+		})
+	}
+	return quotes;
 }
 class Transporter{
     static async Login(req, res) {
@@ -273,23 +285,24 @@ class Transporter{
 			console.log(err);
 		}
 	}
-	bidDetails(bids){
+	static async bidDetails(bids){
 		for(let i in bids.length){
-			bids[i].append = indentModel.findById({_id:bids[i]._id},(err,res)=>{
+			indentModel.findById({_id:bids[i].IndentId}).then(res=>{
 				if(err)
 				{
 					console.log(err)
 				}
 				if(res){
-					return res;
+					bids[i] = {...bids[i],indent:res};
 				}
 			})
 		}
+		bids = await AppendConsigneeName(bids);
 		return bids;
 	}
 	static async GetBids(req,res){
 		try {
-			await bidModel.find({},'_id indentId',async(err,bids)=>{
+			await bidModel.find({Status:0},'_id IndentId ConsigneeId').then(async (bids)=>{
 				const Bids= await this.bidDetails(bids);
 				res.send({bids:Bids});
 			})
@@ -297,26 +310,41 @@ class Transporter{
 			console.log(error)
 		}
 	}
-	static async DidBids(req,res){
+	static DidBids(req,res){
+		var TransporterId = req.decoded.subject;
 		try {
-			await bidModel.findById({_id:req.body._id},(err,bidDetail)=>{
-				var bid = {
-					TransporterId: req.body.TransporterId,
-					Username: req.body.Username,
-					Amount:req.body.Amount
+			quotationModel.find({BidId:BidId,TransporterId:TransporterId}).then(async(quotations)=>{
+				if(quotations.length==0)
+				{
+					var data = {
+								TransporterId: TransporterId,
+								BidId: req.body.BidId,
+								Amount:req.body.Amount
+							}
+					const quotation = new quotationModel(data);
+					quotation.save(err=>{
+						if(err)
+						{
+							console.log(err);
+						}
+						res.send({msg:'sucess'});
+					})
+				}else{
+					quotationModel.updateMany({BidId:BidId,TransporterId:TransporterId},{Amount:req.body.Amount}).then(updated=>{
+						res.send({msg:'updated'});
+					});
 				}
-				bidDetail.bids.push({bid});
-				bidDetail.NoOfBids = bidDetail.NoOfBids+1;
-				bidDetail.save(err=>{
-					if(err){
-						console.log(err)
-					}
-					res.send({msg:"Placed Bid Successfully"});
-				})
 			})
 		} catch (error) {
 			console.log(error)
 		}
+	}
+	static MyQuotes(req,res){
+		var TransporterId = req.decoded.subject; 
+		quotationModel.find({TransporterId}).then(async(quotes)=>{
+			quotes = await appendBid(quotes);
+			res.send({quotes});
+		})
 	}
 	static async Requests(req,res){
 		var TransporterId = req.decoded.subject;

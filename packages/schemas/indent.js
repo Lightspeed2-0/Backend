@@ -45,15 +45,21 @@ const requestSchema = new Schema({
 const bidSchema = new Schema({
 	ConsigneeId:String,
 	IndentId: String,
-	BidStatus: String,
+	BidStatus: Number,
 	NoOfBids:Number,
 	Bids:[{
-		TransporterId:String,
-		Username: String,
-		Amount:Number
+		QuotationId:String,
 	}],
 	Amount: Number
 },{
 	timestamps:true
   })
-module.exports = {indentSchema,requestSchema,bidSchema};
+
+const QuotationSchema = new Schema({
+	BidId:String,
+	TransporterId:String,
+	Amount: Number,
+},{
+	timestamps:true
+})
+module.exports = {indentSchema,requestSchema,bidSchema,QuotationSchema};

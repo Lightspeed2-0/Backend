@@ -23,4 +23,9 @@ Router.post("/createIndent",Auth,Consignee.CreateIndent);
 Router.get("/yourOrders",Auth,Consignee.YourOrders);
 Router.post("/indentConfirm",Auth,Consignee.IndentConfirm);
 Router.post("/cancelOrder",Auth,Consignee.CancelOrder);
+Router.post("/createBid",Auth,Consignee.CreateBid);
+Router.get("/viewBids",Auth,Consignee.GetBids);
+Router.post("/acceptBid",Auth,Consignee.AcceptBid);
+Router.post("/closeBid",Auth,Consignee.CloseBid);
+
 module.exports = Router;

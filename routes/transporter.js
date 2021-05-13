@@ -3,6 +3,7 @@ const { Transporter } = require("../controller/index");
 const { Auth } = require('../packages/middleware/authindex')
 const Router = express.Router();
 const multer = require('multer');
+const transporter = require("../packages/auth/mailer");
 const storage = multer.diskStorage({
     destination: function (req, file, next) {
       if(file.fieldname==="PanCard")
@@ -30,5 +31,7 @@ Router.post("/removeDriver",Auth,Transporter.RemoveDriver);
 Router.post("/respondRequest",Auth,Transporter.RespondRequest);
 Router.get("/getOrders",Auth,Transporter.GetOrders);
 Router.post("/cancelOrder",Auth,Transporter.CancelOrder);
-
+Router.get("/getBids",Auth,Transporter.GetBids);
+Router.post("/didBid",Auth,Transporter.DidBids);
+Router.post('/myQuotes',Auth,Transporter.MyQuotes);
 module.exports = Router;

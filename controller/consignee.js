@@ -1,10 +1,18 @@
-const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel, driverModel} = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel, driverModel, quotationModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
 const path = require('path');
 const { static } = require("express");
-
+const appendQuotes = async (bids)=>{
+	for(let i=0;i<bids.length;i++)
+	{
+		await quotationModel.find({BidId:bids[i]._id}).then(quotes=>{
+			bids[i]={...bids[i],quotes};
+		})
+	}
+	return bids;
+}
 class Consignee {
 	static async Login(req, res) {
 		try {
@@ -275,7 +283,7 @@ class Consignee {
 					Amount : -1,
 					IsPaid : false,
 					PaymentId : null,
-					Status : 0
+					Status : -1
 					}
 		const indent = new indentModel(data);
 		indent.save((err,indents)=>{
@@ -286,7 +294,7 @@ class Consignee {
 				const bid = new bidModel({
 					ConsigneeId: ConsigneeId,
 					IndentId: indents._id,
-					BidStatus:"created",
+					BidStatus:0,
 					NoOfBids:0,
 					Bids:[],
 					Amount: -1
@@ -297,11 +305,60 @@ class Consignee {
 						console.log(err);
 						res.status(404);
 					}else{
-						res.send({bid:bids});
+						res.send({msg:"success"});
 					}
 				})
 			}
 		}) 
+	}
+
+	static GetBids(req,res){
+		var ConsigneeId = req.decoded.subject;
+		bidModel.find({ConsigneeId:ConsigneeId}).then(async(bids)=>{
+			bids = await appendQuotes(bids);
+			res.send({bids:bids});
+		})
+	}
+
+	static CloseBid(req,res){
+		var ConsigneeId = req.decoded.subject;
+		var BidId= req.body.BidId;
+		bidModel.find({ConsigneeId,_id:BidId}).then(bids=>{
+			if(bids.length==0)
+			{
+				res.send({msg:'nobids'})
+			}else{
+				bidModel.deleteOne({_id:BidId}).then(bid=>{
+					quotationModel.deleteMany({BidId:BidId}).then(quotes=>{
+						res.send({msg:'success'});
+					})
+				})
+			}
+		})
+	}
+
+	static async AcceptBid(req,res){
+		var BidId = req.body.BidId;
+		var TransporterId = req.body.TransporterId;
+		var ConsigneeId = req.decoded.subject;
+		bidModel.findById({_id:BidId},async (err,bid)=>{
+			await quotationModel.find({BidId:BidId,TransporterId:TransporterId}).then(quote=>{
+				const request = new requestModel({
+					ConsigneeId: ConsigneeId,
+					TransporterId: TransporterId,
+					IndentId: bid._doc.IndentId,
+					TransporterDeleted: false,
+					ConsigneeDeleted: false,
+					Amount: quote.Amount,
+					Status : 2
+				})
+				request.save();
+			})
+			await bidModel.updateOne({_id:BidId},{Status:1});
+			await quotationModel.deleteMany({BidId:BidId,TransporterId:{$ne:TransporterId}}).then(quotes=>{
+				res.send({msg:"success"})
+			})
+		})
 	}
 	static async ViewTransporter(req,res){
 		await transporterModel.findById({_id:req.body.TransporterId},'Username Email MobileNo Rating',(err,transporter)=>{

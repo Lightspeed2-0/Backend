@@ -1,7 +1,7 @@
 const {consignee_login} = require('./consignee')
 const {transporterModel,driverModel} = require('./transporter');
 const {adminModel} = require('./admin');
-const {indentModel,requestModel, bidModel} = require('./indent');
+const {indentModel,quotationModel,requestModel, bidModel} = require('./indent');
 const { orderModel } = require('./order');
 const {contactFormModel} = require('./general');
 module.exports = {
@@ -13,5 +13,6 @@ module.exports = {
     bidModel,
     driverModel,
     orderModel,
-    contactFormModel
+    contactFormModel,
+    quotationModel
 }
