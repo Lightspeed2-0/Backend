@@ -120,6 +120,7 @@ const appendOrders = async(Orders)=>{
 const appendBid= async(quotes)=>{
 	for (let i=0;i< quotes.length;i++)
 	{
+		quotes[i] = quotes[i]._doc;
 		await bidModel.findById({_id:quotes[i].BidId}).then(async(bid)=>{
 			quotes[i] = {...quotes[i],bid:bid};
 			await indentModel.findById({_id:bid.IndentId}).then(indent=>{
@@ -286,8 +287,9 @@ class Transporter{
 		}
 	}
 	static async bidDetails(bids){
-		for(let i in bids.length){
-			indentModel.findById({_id:bids[i].IndentId}).then(res=>{
+		for(let i =0;i< bids.length;i++){
+			bids[i] = bids[i]._doc;
+			await indentModel.findById({_id:bids[i].IndentId},(err,res)=>{
 				if(err)
 				{
 					console.log(err)
@@ -302,8 +304,8 @@ class Transporter{
 	}
 	static async GetBids(req,res){
 		try {
-			await bidModel.find({Status:0},'_id IndentId ConsigneeId').then(async (bids)=>{
-				const Bids= await this.bidDetails(bids);
+			await bidModel.find({BidStatus:0},'_id IndentId ConsigneeId',async (err,bids)=>{
+				const Bids= await Transporter.bidDetails(bids);
 				res.send({bids:Bids});
 			})
 		} catch (error) {
@@ -313,7 +315,7 @@ class Transporter{
 	static DidBids(req,res){
 		var TransporterId = req.decoded.subject;
 		try {
-			quotationModel.find({BidId:BidId,TransporterId:TransporterId}).then(async(quotations)=>{
+			quotationModel.find({BidId:req.body.BidId,TransporterId:TransporterId}).then(async(quotations)=>{
 				if(quotations.length==0)
 				{
 					var data = {
@@ -327,10 +329,10 @@ class Transporter{
 						{
 							console.log(err);
 						}
-						res.send({msg:'sucess'});
+						res.send({msg:'success'});
 					})
 				}else{
-					quotationModel.updateMany({BidId:BidId,TransporterId:TransporterId},{Amount:req.body.Amount}).then(updated=>{
+					quotationModel.updateMany({BidId:req.body.BidId,TransporterId:TransporterId},{Amount:req.body.Amount}).then(updated=>{
 						res.send({msg:'updated'});
 					});
 				}
@@ -341,7 +343,7 @@ class Transporter{
 	}
 	static MyQuotes(req,res){
 		var TransporterId = req.decoded.subject; 
-		quotationModel.find({TransporterId}).then(async(quotes)=>{
+		quotationModel.find({TransporterId:TransporterId}).then(async(quotes)=>{
 			quotes = await appendBid(quotes);
 			res.send({quotes});
 		})
