@@ -96,11 +96,13 @@ const appendIndents = async (Order)=>{
     return Order;
 }
 const appendOrders = async(Orders)=>{
+	console.log("here")
     for(let i=0;i<Orders.length;i++)
     {
 		// console.log(Orders[i])
 		// console.log(i)
         Orders[i] = await appendIndents(Orders[i]._doc);
+		console.log(i)
 		await  driverModel.findById({_id:Orders[i].DriverId},'Username',(err,driver)=>{
 			Orders[i] = {...Orders[i],Driver:driver._doc}
 		})
@@ -122,10 +124,12 @@ const appendBid= async(quotes)=>{
 	{
 		quotes[i] = quotes[i]._doc;
 		await bidModel.findById({_id:quotes[i].BidId}).then(async(bid)=>{
-			quotes[i] = {...quotes[i],bid:bid};
-			await indentModel.findById({_id:bid.IndentId}).then(indent=>{
-				quotes[i]= {...quotes[i],indent:indent};
-			})
+			if(bid!=null){
+				quotes[i] = {...quotes[i],bid:bid};
+				await indentModel.findById({_id:bid.IndentId}).then(indent=>{
+					quotes[i]= {...quotes[i],indent:indent};
+				})
+			}
 		})
 	}
 	return quotes;
@@ -133,7 +137,7 @@ const appendBid= async(quotes)=>{
 class Transporter{
     static async Login(req, res) {
         try {
-			console.log(req.body)
+			// console.log(req.body)
 			const body = req.body;
 			transporterModel.findOne({ Email: body.Email }, (err, transporter) => {
 				if (err) {
@@ -345,7 +349,7 @@ class Transporter{
 		var TransporterId = req.decoded.subject; 
 		quotationModel.find({TransporterId:TransporterId}).then(async(quotes)=>{
 			quotes = await appendBid(quotes);
-			res.send({quotes});
+			res.send({bids:quotes});
 		})
 	}
 	static async Requests(req,res){
@@ -433,7 +437,7 @@ class Transporter{
 				{
 					console.log(err);
 				}
-				console.log(request)
+				// console.log(request)
 				if(request.n>0)
 				{
 					res.send({msg:"success"});

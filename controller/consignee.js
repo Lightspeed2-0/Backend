@@ -4,6 +4,15 @@ const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
 const path = require('path');
 const { static } = require("express");
+const appendTransporter = async(quotes)=>{
+	for (let i=0;i<quotes.length;i++)
+	{
+		await transporterModel.findById({_id:quotes[i].TransporterId},'Username').then(transporter=>{
+			quotes[i] = {...quotes[i]._doc,transporter}
+		})
+	}
+	return quotes;
+}
 const appendQuotes = async (bids)=>{
 	for(let i=0;i<bids.length;i++)
 	{
@@ -11,13 +20,76 @@ const appendQuotes = async (bids)=>{
 		await indentModel.findById({_id:bids[i].IndentId}).then(indent=>{
 			bids[i] = {...bids[i],indent:indent._doc}
 		})
-		await quotationModel.find({BidId:bids[i]._id}).sort({Amount:1}).then(quotes=>{
-			// console.log(quotes)
+		await quotationModel.find({BidId:bids[i]._id}).sort({Amount:1}).then(async(quotes)=>{
+			// console.log( quotes);
+			quotes = await appendTransporter(quotes);
 			bids[i]={...bids[i],quotes};
 		})
 	}
 	return bids;
 }
+const appendRequests = async(indents)=>{
+	console.log(indents.length)
+	for(let i =indents.length-1;i>=0;i--){
+		console.log(i,indents[i].Status)
+		if(indents[i].Status === -1)
+		{
+			await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
+				if(request.length>0)
+				{
+					indents[i]= {...indents[i]._doc,...{request:request[0]}};
+					transporterModel.findById({_id:request[0].TransporterId},'Username').then(transporter=>{
+						indents[i] = {...indents[i],Transporter:transporter}
+					})
+				}
+			}) 
+			
+		}else{
+			await transporterModel.findById({_id:indents[i].TransporterId},'Username').then(transporter=>{
+				indents[i] = {...indents[i]._doc,Transporter:transporter}
+			})
+			await orderModel.findById({_id:indents[i].OrderId}).then(async (order)=>{
+				// console.log(order)
+				await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
+					indents[i] = {...indents[i],driver:driver}
+					console.log(indents[i])
+				})
+			})
+			
+		}
+	}
+	if(indents.length>0)
+	{
+		let i=0;
+		// console.log(indents[0])
+		if(indents[0].Status === -1)
+		{
+			await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
+				if(request.length>0)
+				{
+					indents[i]= {...indents[i],...{request:request[0]}};
+					transporterModel.findById({_id:request[0].TransporterId},'Username').then(transporter=>{
+						indents[i] = {...indents[i],Transporter:transporter}
+					})
+				}
+			}) 
+		}else{
+			await transporterModel.findById({_id:indents[i].TransporterId},'Username').then(transporter=>{
+				indents[i] = {...indents[i],Transporter:transporter}
+			})
+			await orderModel.findById({_id:indents[i].OrderId}).then(async (order)=>{
+				// console.log(order)
+				await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
+					indents[i] = {...indents[i],driver:driver}
+					console.log(indents[i])
+				})
+			})
+			
+		}
+	}
+	return indents;
+}
+
 class Consignee {
 	static async Login(req, res) {
 		try {
@@ -109,7 +181,7 @@ class Consignee {
 
 	static async Verify(req,res){
 		try{
-			console.log(req.body)
+			// console.log(req.body)
 			await consignee_login.find({Email:req.body.Email},async(err,consignee)=>{
 				if(err)console.log(err);
 				else{
@@ -175,7 +247,7 @@ class Consignee {
 				{
 					console.log(err);
 				}else{
-					console.log(transporters)
+					// console.log(transporters)
 					res.send({transporters})
 				}
 			})
@@ -228,56 +300,16 @@ class Consignee {
 	
 	static async YourOrders(req,res){
 		var ConsigneeId = req.decoded.subject;
-		await indentModel.find({ConsigneeId},async (err,indents)=>{
+		await indentModel.find({ConsigneeId,Status:{$gt:-2}},async (err,indents)=>{
 			if(err){
 				console.log(err);
 			}
 			// console.log("h")
-			var finalIndents = await Consignee.appendRequests(indents);
-			// console.log(/"ere")
+			var finalIndents = await appendRequests(indents);
+			console.log(finalIndents)
 			// console.log(finalIndents)
 			res.send({indents : finalIndents});
 		})
-	}
-	static async appendRequests(indents){
-		// console.log(indents.length)
-		for(let i =indents.length-1;i>=0;i--){
-			if(indents[i].Status === -1)
-			{
-				await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
-					// console.log(request[0])
-					indents[i]= {...indents[i]._doc,...{request:request[0]}};
-					// console.log(indents[i])
-					transporterModel.findById({_id:request[0].TransporterId},'Username').then(transporter=>{
-						indents[i] = {...indents[i],Transporter:transporter}
-					})
-				}) 
-				
-			}else{
-				await transporterModel.findById({_id:indents[i].TransporterId},'Username').then(transporter=>{
-					indents[i] = {...indents[i]._doc,Transporter:transporter}
-				})
-				await orderModel.findById({_id:indents[i].OrderId}).then(async (order)=>{
-					await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
-						indents[i] = {...indents[i],driver:driver}
-					})
-					
-				})
-				
-			}
-		}
-		if(indents.length>=0)
-		{
-			if(indents[0].Status === -1)
-			{
-				// console.log(indents[0])
-				await requestModel.find({IndentId:indents[0]._id},(err,request)=>{
-					// console.log(request[0])
-					indents[0]= {...indents[0],...{request:request[0]}};
-				}) 
-			}
-		}
-		return indents;
 	}
 	static async CreateBid(req,res){
 		const ConsigneeId = req.decoded.subject;
@@ -287,7 +319,7 @@ class Consignee {
 					Amount : -1,
 					IsPaid : false,
 					PaymentId : null,
-					Status : -1
+					Status : -2
 					}
 		const indent = new indentModel(data);
 		indent.save((err,indents)=>{
@@ -345,22 +377,26 @@ class Consignee {
 		var BidId = req.body.BidId;
 		var TransporterId = req.body.TransporterId;
 		var ConsigneeId = req.decoded.subject;
-		bidModel.findById({_id:BidId},async (err,bid)=>{
-			await quotationModel.find({BidId:BidId,TransporterId:TransporterId}).then(quote=>{
+		await bidModel.findById({_id:BidId},async (err,bid)=>{
+			await quotationModel.find({BidId:BidId,TransporterId:TransporterId}).then(async(quote)=>{
+				// console.log(quote)
 				const request = new requestModel({
 					ConsigneeId: ConsigneeId,
 					TransporterId: TransporterId,
 					IndentId: bid._doc.IndentId,
 					TransporterDeleted: false,
 					ConsigneeDeleted: false,
-					Amount: quote.Amount,
+					Amount: quote[0].Amount,
 					Status : 2
 				})
+				// console.log(request)
 				request.save();
-			})
-			await bidModel.updateOne({_id:BidId},{Status:1});
-			await quotationModel.deleteMany({BidId:BidId,TransporterId:{$ne:TransporterId}}).then(quotes=>{
-				res.send({msg:"success"})
+				await indentModel.updateMany({_id:bid._doc.IndentId},{Status:-1});
+				await bidModel.updateMany({_id:BidId},{BidStatus:1});
+				await quotationModel.deleteMany({BidId:BidId,TransporterId:{$ne:TransporterId}}).then(quotes=>{
+					res.send({msg:"success"})
+				})
+			// res.send({msg:"sucedd"})
 			})
 		})
 	}
@@ -392,9 +428,9 @@ class Consignee {
 				{
 					console.log(err);
 				}
-				console.log(req.body.IndentId)
+				// console.log(req.body.IndentId)
 				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true},err=>{
-					console.log("sfs");
+					// console.log("sfs");
 					res.send({msg:"Payment Successful"});
 				});
 				
