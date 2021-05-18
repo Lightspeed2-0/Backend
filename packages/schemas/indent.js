@@ -29,8 +29,7 @@ const indentSchema =new Schema({
 },{
 	timestamps:true
   });
-
-const requestSchema = new Schema({
+const request = {
     ConsigneeId: String,
 	TransporterId: String,
 	IndentId: String,
@@ -38,10 +37,14 @@ const requestSchema = new Schema({
 	ConsigneeDeleted: Boolean,
 	Amount: Number,
 	Status: Number	
-},{
+}
+const requestSchema = new Schema({...request},{
 	timestamps:true
   })
-
+const poolingRequestSchema = new Schema({...request,
+	OrderId:String},{
+		timestamps:true
+	  })
 const bidSchema = new Schema({
 	ConsigneeId:String,
 	IndentId: String,
@@ -62,4 +65,4 @@ const QuotationSchema = new Schema({
 },{
 	timestamps:true
 })
-module.exports = {indentSchema,requestSchema,bidSchema,QuotationSchema};
+module.exports = {poolingRequestSchema,indentSchema,requestSchema,bidSchema,QuotationSchema};

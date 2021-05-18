@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel, orderModel, quotationModel} = require("../model/index");
+const { transporterModel ,bidModel, indentModel, requestModel, consignee_login, driverModel, orderModel, quotationModel,poolingRequestModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs')
@@ -469,7 +469,16 @@ class Transporter{
 				await indentModel.updateMany({_id:request.IndentId},{TransporterId:TransporterId,Amount:request.Amount,Status:0});
 				request.Status = 5;
 				request.save();
-				var order= new orderModel({Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
+				var indent = await indentModel.findById({_id:request.IndentId});
+				var Source = {
+					City : indent.Source.City,
+					Pincode : indent.Source.Pincode,
+				}
+				var Destination ={
+					City :  indent.Destination.City,
+					Pincode : indent.Destination.Pincode
+				}
+				var order= new orderModel({Destination:Destination,Source:Source,Status:0,OrderDate: indent.OrderDate,Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
 				order.save(async(err,order)=>{
 					if(err)
 					{
@@ -526,5 +535,69 @@ class Transporter{
 			}
 		})
 	}
+	static async PoolingRequests(req,res){
+		var TransporterId = req.decoded.subject;
+		await poolingRequestModel.find({TransporterId:TransporterId,Status:{$lt:5}},async(err,requests)=>{
+			if(err)
+			{
+				console.log(err);
+			}
+			requests = await AppendIndent(requests);
+			requests = await AppendPoolingOrder(requests);
+			res.send({requests});
+		})
+	}
+	static async RespondPoolingRequest(req,res){
+		var TransporterId = req.decoded.subject;
+		if(req.body.IsAccepted === true)
+		{
+			poolingRequestModel.updateMany({TransporterId:TransporterId,_id:req.body.PoolingRequestId},{Status:2,Amount:req.body.Amount},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				// console.log(request)
+				if(request.n>0)
+				{
+					res.send({msg:"success"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}else{
+			poolingRequestModel.updateMany({TransporterId:TransporterId,_id:req.body.PoolingRequestId},{Status:1},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				if(request.n>0)
+				{
+					res.send({msg:"success"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}
+	}
+	static async AppendPoolingOrder(req,res){
+		var TransporterId = req.decoded.subject;
+		var TimeNow = new Date();
+		var date = new Date().toLocaleDateString();
+		TimeNow = TimeNow.toLocaleTimeString(); 
+		var request = await poolingRequestModel.findById({_id:req.body.PoolingRequestId});
+		await poolingRequestModel.updateMany({_id:req.body.PoolingRequestId},{Status:5});
+		await orderModel.updateMany({_id:req.body.OrderId},{$push:{Indents:req.body.IndentId}},{ upsert: true, new: true });
+		await indentModel.updateMany({_id:req.body.IndentId},{OrderId:req.body.OrderId,TransporterId:TransporterId,Amount:request.Amount,Status:0,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true });
+		res.send({msg:success})
+	}
+}
+const AppendPoolingOrder= async (requests)=>{
+	for( let i=0;i<requests.length;i++)
+	{
+		await orderModel.findById({_id:requests.OrderId},(err,order)=>{
+			requests[i] = {...requests[i],order};
+		})
+	}
+	return requests;
 }
 module.exports =  Transporter;

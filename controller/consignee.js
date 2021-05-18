@@ -1,4 +1,4 @@
-const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel, driverModel, quotationModel} = require("../model/index");
+const { consignee_login,transporterModel , indentModel ,requestModel ,bidModel,orderModel, driverModel, quotationModel, poolingRequestModel} = require("../model/index");
 const { JWTsign } = require("../packages/auth/tokenize");
 const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
@@ -88,6 +88,16 @@ const appendRequests = async(indents)=>{
 		}
 	}
 	return indents;
+}
+const appendPoolRequest = async(indents)=>{
+	for(let i=0;i<indents.length;i++)
+	{
+	  if(indents[i].Status === -3)
+	  await poolingRequestModel.findById({IndentId:indents[i]._id},(err,request)=>{
+		indents[i] = {...indents[i]._doc,request};
+	  })
+	}
+	return indents
 }
 
 class Consignee {
@@ -467,6 +477,108 @@ class Consignee {
 			}
 		})
 	} 
+
+	static async CreatePool(req,res){
+		const ConsigneeId = req.decoded.subject;
+		let body = req.body;
+		const {...refdata} = body
+		let data = {...refdata,
+					ConsigneeId,
+					OrderId: "",
+					Amount : -1,
+					IsPaid : false,
+					PaymentId : null,
+					Status : -4
+		}
+		const indent = new indentModel(data);
+		indent.save(err=>{
+			if(err)
+			{
+				console.log(err);
+				res.status(500).send({msg:"Internal Error"})
+			}else
+			res.send({msg:"success"});
+		})
+	}
+	static async GetPool(req,res){
+		const ConsigneeId = req.decoded.subject;
+		indentModel.find({ConsigneeId,$or:[{'Status' : -4},{'Status':-3}]},async(err,indents)=>{
+			if(err)
+			{
+				console.log(err);
+				res.status(500).send({msg:"DataBase Error"});
+			}else{
+        		indents = await appendPoolRequest(indents);
+				res.send({indents})
+			}
+		})
+	}
+
+	static async RequestPool(req,res){
+		const ConsigneeId = req.decoded.subject;
+		const request = new poolingRequestModel({
+			ConsigneeId: ConsigneeId,
+			...req.body,
+			TransporterDeleted: false,
+			ConsigneeDeleted: false,
+			Amount: -1,
+			Status : 0
+		})
+		indentModel.updateMany({_id:req.body.IndentId},{Status:-3});
+		request.save((err,request)=>{
+			if(err)
+			{
+				console.log(err);
+				res.status(500);
+			}else{
+				res.send({msg:"success"});
+			}
+		})
+	}
+
+	static async PoolingConfirm(req,res){
+		var ConsigneeId = req.decoded.subject;
+		if(req.body.IsAccepted === true)
+		{
+			await poolingRequestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.PoolingRequestId},{Status:4},async(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				await indentModel.updateMany({_id:req.body.IndentId},{IsPaid:true},err=>{
+					res.send({msg:"Payment Successful"});
+				});
+				
+			});
+
+		}else{
+			poolingRequestModel.updateMany({ConsigneeId:ConsigneeId,_id:req.body.PoolingRequestId},{Status:3},(err,request)=>{
+				if(err)
+				{
+					console.log(err);
+				}
+				if(request.n>0)
+				{
+					res.send({msg:"successfully declined"});
+				}else{
+					res.send({msg:"failed"});
+				}
+			})
+		}
+	}
+
+	static async RecommendPooling(req,res){
+		orderModel.find({},(err,orders)=>{
+			if(err)
+			{
+				console.log(err);
+				res.status(500).send({msg:"Database Error"});
+			}else{
+				res.send({orders})
+			}
+		})
+	}
+
 }
 
 module.exports = Consignee;
