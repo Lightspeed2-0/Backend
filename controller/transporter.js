@@ -7,6 +7,12 @@ const path = require('path');
 const { fstat } = require("fs");
 const { OrderSchema } = require("../packages/schemas");
 
+
+const PincodeDistance = require("pincode-distance").default;
+
+const Pincode = new PincodeDistance();
+
+
 const OtpSender = async(res,Email,msg)=>{
     var OTP = Math.floor(Math.random()*(800000)+100000);
     await transporterModel.updateMany({Email:Email},{OTP:OTP});
@@ -473,10 +479,12 @@ class Transporter{
 				var Source = {
 					City : indent.Source.City,
 					Pincode : indent.Source.Pincode,
+					Geolocation : indent.Source.Geolocation
 				}
 				var Destination ={
 					City :  indent.Destination.City,
-					Pincode : indent.Destination.Pincode
+					Pincode : indent.Destination.Pincode,
+					Geolocation : indent.Source.Geolocation
 				}
 				var order= new orderModel({Destination:Destination,Source:Source,Status:0,OrderDate: indent.OrderDate,Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
 				order.save(async(err,order)=>{
@@ -586,15 +594,15 @@ class Transporter{
 		TimeNow = TimeNow.toLocaleTimeString(); 
 		var request = await poolingRequestModel.findById({_id:req.body.PoolingRequestId});
 		await poolingRequestModel.updateMany({_id:req.body.PoolingRequestId},{Status:5});
-		await orderModel.updateMany({_id:req.body.OrderId},{$push:{Indents:req.body.IndentId}},{ upsert: true, new: true });
+		await orderModel.updateMany({_id:req.body.OrderId},{$push:{Indents:{IndentId:req.body.IndentId}}},{ upsert: true, new: true });
 		await indentModel.updateMany({_id:req.body.IndentId},{OrderId:req.body.OrderId,TransporterId:TransporterId,Amount:request.Amount,Status:0,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true });
-		res.send({msg:success})
+		res.send({msg:"success"})
 	}
 }
 const AppendPoolingOrder= async (requests)=>{
 	for( let i=0;i<requests.length;i++)
 	{
-		await orderModel.findById({_id:requests.OrderId},(err,order)=>{
+		await orderModel.findById({_id:requests[i].OrderId},(err,order)=>{
 			requests[i] = {...requests[i],order};
 		})
 	}

@@ -34,4 +34,8 @@ Router.post("/cancelOrder",Auth,Transporter.CancelOrder);
 Router.get("/getBids",Auth,Transporter.GetBids);
 Router.post("/didBid",Auth,Transporter.DidBids);
 Router.get('/myQuotes',Auth,Transporter.MyQuotes);
+Router.get('/poolRequests',Auth,Transporter.PoolingRequests);
+Router.post('/respondPoolRequest',Auth,Transporter.RespondPoolingRequest);
+Router.post('/appendPoolOrder',Auth,Transporter.AppendPoolingOrder);
+
 module.exports = Router;

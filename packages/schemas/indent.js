@@ -9,13 +9,15 @@ const indentSchema =new Schema({
 			Address : String,
 			City : String,
 			Pincode : String,
-			State : String
+			State : String,
+			Geolocation :{}
 		    },
 	Destination : {
 			Address : String,
 			City : String,
 			Pincode : String,
-			State : String
+			State : String,
+			Geolocation :{}
 		    },
 	OrderDate: Date,
 	Volume : Number,

@@ -31,5 +31,5 @@ Router.post("/createPool",Auth,Consignee.CreatePool);
 Router.get("/getPool",Auth,Consignee.GetPool);
 Router.post("/recommendPool",Auth,Consignee.RecommendPooling);
 Router.post("/acceptPool",Auth,Consignee.PoolingConfirm);
-
+Router.post("/requestPool",Auth,Consignee.RequestPool);
 module.exports = Router;

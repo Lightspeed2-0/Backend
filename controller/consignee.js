@@ -4,6 +4,11 @@ const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
 const path = require('path');
 const { static } = require("express");
+
+const PincodeDistance = require("pincode-distance").default;
+
+const Pincode = new PincodeDistance();
+
 const appendTransporter = async(quotes)=>{
 	for (let i=0;i<quotes.length;i++)
 	{
@@ -93,9 +98,11 @@ const appendPoolRequest = async(indents)=>{
 	for(let i=0;i<indents.length;i++)
 	{
 	  if(indents[i].Status === -3)
-	  await poolingRequestModel.findById({IndentId:indents[i]._id},(err,request)=>{
-		indents[i] = {...indents[i]._doc,request};
-	  })
+	  {
+		await poolingRequestModel.find({IndentId:indents[i]._doc._id},(err,request)=>{
+			indents[i] = {...indents[i]._doc,request:request[0]};
+		  })
+	  }
 	}
 	return indents
 }
@@ -270,9 +277,15 @@ class Consignee {
 	static async CreateIndent(req,res){
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
-		const {TransporterId,...refdata} = body
+		var {TransporterId,Source,Destination,...refdata} = body
 		// console.log(body)
+		var Geolocation = Pincode.getlatLng(Source.Pincode);
+		Source = {...Source, Geolocation}
+		Geolocation = Pincode.getlatLng(Destination.Pincode)
+		Destination ={...Destination,Geolocation}
 		let data = {...refdata,
+					Source,
+					Destination,
 					ConsigneeId,
 					OrderId: "",
 					Amount : -1,
@@ -324,7 +337,15 @@ class Consignee {
 	static async CreateBid(req,res){
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
-		let data = {...body,
+		var {Source,Destination,...refdata} = body
+		// console.log(body)
+		var Geolocation = Pincode.getlatLng(Source.Pincode);
+		Source = {...Source, Geolocation}
+		Geolocation = Pincode.getlatLng(Destination.Pincode)
+		Destination ={...Destination,Geolocation}
+		let data = {...refdata,
+					Source,
+					Destination,
 					ConsigneeId,
 					Amount : -1,
 					IsPaid : false,
@@ -481,8 +502,15 @@ class Consignee {
 	static async CreatePool(req,res){
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
-		const {...refdata} = body
+		var {Source,Destination,...refdata} = body
+		// console.log(body)
+		var Geolocation = Pincode.getlatLng(Source.Pincode);
+		Source = {...Source, Geolocation}
+		Geolocation = Pincode.getlatLng(Destination.Pincode)
+		Destination ={...Destination,Geolocation}
 		let data = {...refdata,
+					Source,
+					Destination,
 					ConsigneeId,
 					OrderId: "",
 					Amount : -1,
@@ -524,7 +552,7 @@ class Consignee {
 			Amount: -1,
 			Status : 0
 		})
-		indentModel.updateMany({_id:req.body.IndentId},{Status:-3});
+		await indentModel.updateMany({_id:req.body.IndentId},{Status:-3});
 		request.save((err,request)=>{
 			if(err)
 			{

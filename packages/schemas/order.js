@@ -11,11 +11,13 @@ const OrderSchema =new Schema({
     OrderDate: Date,
     Source : {
         City : String,
-        Pincode : String
+        Pincode : String,
+        Geolocation :{}
         },
     Destination : {
         City : String,
-        Pincode : String
+        Pincode : String,
+        Geolocation :{}
         },
 },{
     timestamps:true
