@@ -27,5 +27,9 @@ Router.post("/createBid",Auth,Consignee.CreateBid);
 Router.get("/viewBids",Auth,Consignee.GetBids);
 Router.post("/acceptBid",Auth,Consignee.AcceptBid);
 Router.post("/closeBid",Auth,Consignee.CloseBid);
+Router.post("/createPool",Auth,Consignee.CreatePool);
+Router.get("/getPool",Auth,Consignee.GetPool);
+Router.post("/recommendPool",Auth,Consignee.RecommendPooling);
+Router.post("/acceptPool",Auth,Consignee.PoolingConfirm);
 
 module.exports = Router;
