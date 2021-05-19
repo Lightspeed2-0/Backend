@@ -23,7 +23,7 @@ app.use(
 //db connection
 mongoose.connect(
   "mongodb+srv://jayasurya:123@development.cdhc7.mongodb.net/staging",
-  { useUnifiedTopology: true, useNewUrlParser: true }
+  { useUnifiedTopology: true, useNewUrlParser: true ,useFindAndModify:false}
 );
 const db = mongoose.connection;
 

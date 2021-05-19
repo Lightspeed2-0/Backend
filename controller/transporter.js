@@ -89,13 +89,13 @@ const appendIndents = async (Order)=>{
     return Order;
 }
 const appendOrders = async(Orders)=>{
-	console.log("here")
+	// console.log("here")
     for(let i=0;i<Orders.length;i++)
     {
 		// console.log(Orders[i])
 		// console.log(i)
         Orders[i] = await appendIndents(Orders[i]._doc);
-		console.log(i)
+		// console.log(i)
 		await  driverModel.findById({_id:Orders[i].DriverId},'Username',(err,driver)=>{
 			Orders[i] = {...Orders[i],Driver:driver._doc}
 		})
@@ -192,7 +192,7 @@ class Transporter{
 				html: `<p>Thank you for registering in our Lightspeed</p><p>OTP is:</p><h1>${OTP}</h1><br><br><p>Thanks & Regards</p><p>Lightspeed Team</p>`// plain text body
 			};
 			mailTransporter.sendMail(mailOptions, async function (err, info) {
-				console.log(info)
+				// console.log(info)
 				if(err)
 					res.status(400).send({msg:"OTP not send"})
 				else{
@@ -473,7 +473,12 @@ class Transporter{
 					Pincode : indent.Destination.Pincode,
 					Geolocation : indent.Destination.Geolocation
 				}
-				var order= new orderModel({Destination:Destination,Source:Source,Status:0,OrderDate: indent.OrderDate,Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
+				var TotalVolume = req.body.TotalVolume | 1000;
+				var TotalWeight = req.body.TotalWeight | 1000;
+				var RemWeight = TotalWeight - indent.Weight;
+				var RemVolume = TotalVolume -indent.Volume;
+				var VehicleNo = req.body.VehicleNo | "TN 25 JS 0710"
+				var order= new orderModel({IsLTL:indent.IsLTL,TotalVolume,TotalWeight,RemWeight,RemVolume,VehicleNo,Destination:Destination,Source:Source,Status:0,OrderDate: indent.OrderDate,Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
 				order.save(async(err,order)=>{
 					if(err)
 					{
@@ -579,9 +584,12 @@ class Transporter{
 		var TimeNow = new Date();
 		var date = new Date().toLocaleDateString();
 		TimeNow = TimeNow.toLocaleTimeString(); 
+		var indent = await indentModel.findById({_id:req.body.IndentId})
 		var request = await poolingRequestModel.findById({_id:req.body.PoolingRequestId});
 		await poolingRequestModel.updateMany({_id:req.body.PoolingRequestId},{Status:5});
-		await orderModel.updateMany({_id:req.body.OrderId},{$push:{Indents:{IndentId:req.body.IndentId}}},{ upsert: true, new: true });
+		indent.Volume = -1*indent.Volume;
+		indent.Weight = -1*indent.Weight;
+		await orderModel.findByIdAndUpdate({_id:req.body.OrderId},{$inc:{RemVolume:indent.Volume,RemWeight:indent.Weight},$push:{Indents:{IndentId:req.body.IndentId}}},{ upsert: true, new: true });
 		await indentModel.updateMany({_id:req.body.IndentId},{OrderId:req.body.OrderId,TransporterId:TransporterId,Amount:request.Amount,Status:0,$push:{StatusStack:{Date:date,Time: TimeNow}}},{ upsert: true, new: true });
 		res.send({msg:"success"})
 	}

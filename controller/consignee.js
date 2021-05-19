@@ -4,11 +4,45 @@ const mailTransporter = require("../packages/auth/mailer");
 const fs = require('fs');
 const path = require('path');
 const { static } = require("express");
-
+const request = require('request');
 const PincodeDistance = require("pincode-distance").default;
 
 const Pincode = new PincodeDistance();
 
+const cordinatesDistance = (lat1, lon1, lat2, lon2, unit) => {
+  if (lat1 == lat2 && lon1 == lon2) {
+    return 0;
+  } else {
+    const radlat1 = (Math.PI * lat1) / 180;
+    const radlat2 = (Math.PI * lat2) / 180;
+    const theta = lon1 - lon2;
+    const radtheta = (Math.PI * theta) / 180;
+    let dist =
+      Math.sin(radlat1) * Math.sin(radlat2) +
+      Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+
+    if (dist > 1) {
+      dist = 1;
+    }
+
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515;
+
+    if (unit == "K") {
+      dist = dist * 1.609344;
+    }
+    if (unit == "N") {
+      dist = dist * 0.8684;
+    }
+    return dist;
+  }
+};
+const getCordinates = (srcPincode, DesPincode) => {
+  const src = Pincode.getlatLng(srcPincode);
+  const des = Pincode.getlatLng(DesPincode);
+  return { src: src, des: des };
+};
 const appendTransporter = async(quotes)=>{
 	for (let i=0;i<quotes.length;i++)
 	{
@@ -34,7 +68,7 @@ const appendQuotes = async (bids)=>{
 	return bids;
 }
 const appendRequests = async(indents)=>{
-	console.log(indents.length)
+	// console.log(indents.length)
 	for(let i =indents.length-1;i>=0;i--){
 		if(indents[i].Status === -1)
 		{
@@ -56,7 +90,7 @@ const appendRequests = async(indents)=>{
 				// console.log(order)
 				await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
 					indents[i] = {...indents[i],driver:driver}
-					console.log(indents[i])
+					// console.log(indents[i])
 				})
 			})
 			
@@ -85,7 +119,7 @@ const appendRequests = async(indents)=>{
 				// console.log(order)
 				await driverModel.findById({_id:order.DriverId},'Username').then(driver=>{
 					indents[i] = {...indents[i],driver:driver}
-					console.log(indents[i])
+					// console.log(indents[i])
 				})
 			})
 			
@@ -105,7 +139,68 @@ const appendPoolRequest = async(indents)=>{
 	}
 	return indents
 }
-
+const  RelatedOrders = async (orders,Indent)=>{
+	var poolingArr = [];
+	for(i=0;i<orders.length;i++)
+	{
+		let sourcePos = -1;
+		let orderCordinates = {src:orders[i].Source.Geolocation,des:orders[i].Destination.Geolocation}
+		var aPromise = new Promise(function(resolve, reject) {
+			let options = {
+				method: "GET",
+				url: `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf624841b747b534394a73b8283ad3de48ff61&start=${orderCordinates.src.lng},${orderCordinates.src.lat}&end=${orderCordinates.des.lng},${orderCordinates.des.lat}`,
+				headers: {
+				Accept:
+					"application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
+				},
+			}
+			// console.log(options.url)
+			request.get(options, function(err, resp, body) {
+				if (err) {
+				reject(err);
+				} else {
+				// console.log(JSON.parse(body))
+				resolve(JSON.parse(body));
+				}
+			})
+		});
+		
+		await aPromise.then(Routes => {
+			if(Routes.error == undefined){
+				Routes = Routes.features[0].geometry.coordinates;
+				let requestsCordinates =  {src:Indent.Source.Geolocation,des:Indent.Destination.Geolocation}
+				for (let j = 0; j < Routes.length; j+=10) {
+					if (
+					cordinatesDistance(
+						Routes[j][1],
+						Routes[j][0],
+						requestsCordinates.src.lat,
+						requestsCordinates.src.lng
+					) <= 20
+					) {
+					sourcePos = j;
+					}
+					if (
+					cordinatesDistance(
+						Routes[j][1],
+						Routes[j][0],
+						requestsCordinates.des.lat,
+						requestsCordinates.des.lng
+					) <= 20
+					) {
+					if (sourcePos === -1) {
+						break;
+					} else {
+						poolingArr.push(orders[i]);
+						break;
+					}
+					}
+				}
+			}
+		})
+	}
+	return poolingArr;
+}
 class Consignee {
 	static async Login(req, res) {
 		try {
@@ -500,7 +595,6 @@ class Consignee {
 		const ConsigneeId = req.decoded.subject;
 		let body = req.body;
 		var {Source,Destination,...refdata} = body
-		// console.log(body)
 		var Geolocation = Pincode.getlatLng(Source.Pincode);
 		Source = {...Source, Geolocation}
 		Geolocation = Pincode.getlatLng(Destination.Pincode)
@@ -593,15 +687,16 @@ class Consignee {
 	}
 
 	static async RecommendPooling(req,res){
-		orderModel.find({},(err,orders)=>{
-			if(err)
-			{
-				console.log(err);
-				res.status(500).send({msg:"Database Error"});
-			}else{
-				res.send({orders})
-			}
-		})
+		var body = req.body;
+		var Indent = body;
+		var orders = await orderModel.find({RemVolume:{$gt:Indent.Volume},RemWeight:{$gt:Indent.Weight}});
+		if(orders.lenght==0)
+		{
+			res.send({orders:[]})
+		}else{
+			orders = await RelatedOrders(orders,Indent);
+			res.send({orders});
+		}
 	}
 
 }

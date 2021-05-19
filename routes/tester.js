@@ -33,16 +33,17 @@ Router.get('/',async(req,res)=>{
     // var indent = await indentModel.findById({_id:"609e1fc1f844d02e3a8b37df"});
     // console.log(indent);
     // const ConsigneeId = req.decoded.subject;
-		indentModel.find({ConsigneeId:"60883b6aa72f47000485d79a",$or:[{'Status' : -4},{'Status':-3}]},async(err,indents)=>{
-			if(err)
-			{
-				console.log(err);
-				res.status(500).send({msg:"DataBase Error"});
-			}else{
-        indents = await appendPoolRequest(indents);
-				res.send({indents})
-			}
-		})
+		// indentModel.find({ConsigneeId:"60883b6aa72f47000485d79a",$or:[{'Status' : -4},{'Status':-3}]},async(err,indents)=>{
+		// 	if(err)
+		// 	{
+		// 		console.log(err);
+		// 		res.status(500).send({msg:"DataBase Error"});
+		// 	}else{
+    //     indents = await appendPoolRequest(indents);
+		// 		res.send({indents})
+		// 	}
+
+  res.send("Test works")
 })
 
 module.exports = Router;

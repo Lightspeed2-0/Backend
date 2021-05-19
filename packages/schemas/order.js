@@ -19,6 +19,12 @@ const OrderSchema =new Schema({
         Pincode : String,
         Geolocation :{}
         },
+    TotalVolume : Number,
+    TotalWeight : Number,
+    RemWeight : Number,
+    RemVolume : Number,
+    VehicleNo : String,
+    IsLTL : Boolean
 },{
     timestamps:true
   });
