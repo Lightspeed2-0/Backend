@@ -36,7 +36,6 @@ const appendQuotes = async (bids)=>{
 const appendRequests = async(indents)=>{
 	console.log(indents.length)
 	for(let i =indents.length-1;i>=0;i--){
-		console.log(i,indents[i].Status)
 		if(indents[i].Status === -1)
 		{
 			await requestModel.find({IndentId:indents[i]._id},(err,request)=>{
@@ -329,8 +328,6 @@ class Consignee {
 			}
 			// console.log("h")
 			var finalIndents = await appendRequests(indents);
-			console.log(finalIndents)
-			// console.log(finalIndents)
 			res.send({indents : finalIndents});
 		})
 	}

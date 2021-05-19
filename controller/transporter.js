@@ -86,19 +86,6 @@ const appendIndents = async (Order)=>{
 			})
         })  
     }
-    // if(Order.Indents.length>0)
-    // {
-    //     let i = Order.Indents.length-1;
-	// 	var _id = Order.Indents[i]
-	// 	// console.log(i)
-    //     // await indentModel.findById({_id:_id},(err,indent)=>{
-    //     //     if(err)
-    //     //     {
-    //     //         console.log(err);
-    //     //     }
-    //     //     Order.Indents[i] = indent;
-    //     // })  
-    // }
     return Order;
 }
 const appendOrders = async(Orders)=>{
@@ -484,7 +471,7 @@ class Transporter{
 				var Destination ={
 					City :  indent.Destination.City,
 					Pincode : indent.Destination.Pincode,
-					Geolocation : indent.Source.Geolocation
+					Geolocation : indent.Destination.Geolocation
 				}
 				var order= new orderModel({Destination:Destination,Source:Source,Status:0,OrderDate: indent.OrderDate,Indents: [{IndentId:request.IndentId}],TransporterId,DriverId : req.body.DriverId});
 				order.save(async(err,order)=>{

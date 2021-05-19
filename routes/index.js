@@ -6,6 +6,7 @@ const tester = require('./tester');
 const admin = require('./admin');
 const driver = require('./driver')
 const {contactFormModel} = require('../model/index');
+const request = require('request')
 const mailTransporter = require("../packages/auth/mailer");
 
 const router = express.Router();
@@ -50,5 +51,40 @@ router.post("/contactForm",async(req,res)=>{
         }
         res.send({msg:"success"});
     });
+})
+
+router.post("/geoLocation",async(req,res)=>{
+    var body = req.body;
+    var getRoute = new Promise(function(resolve, reject) {
+        let options = {
+            method: "GET",
+            url: `https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf624841b747b534394a73b8283ad3de48ff61&start=${body.Source.lng},${body.Source.lat}&end=${body.Destination.lng},${body.Destination.lat}`,
+            headers: {
+              Accept:
+                "application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8",
+            },
+          }
+      request.get(options, function(err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(JSON.parse(body));
+        }
+      })
+    });
+    await getRoute.then(Routes=>{
+        if(Routes.error == undefined)
+        {
+            res.send({coordinates:Routes.features[0].geometry.coordinates});
+        }
+        else{
+            var data = [[body.Source.lng,body.Source.lat],[body.Destination.lng,body.Destination.lat]];
+            res.send({coordinates:data})
+        }
+    }).catch(err=>{
+        console.log(err);
+        var data = [[body.Source.lng,body.Source.lat],[body.Destination.lng,body.Destination.lat]];
+        res.send({coordinates:data})
+    })
 })
 module.exports = router;
